@@ -1,1 +1,1 @@
-config.org
+home/.config/doom.stable/config.org
