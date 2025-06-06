@@ -70,7 +70,6 @@
 
        :emacs
        (dired            ; making dired pretty [functional]
-        +ranger
         +icons)          ;  REVIEW making dired pretty [functional]
        electric          ; smarter, keyword-based electric-indent
        ;;eww               ; the internet is gross

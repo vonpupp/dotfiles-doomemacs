@@ -55,15 +55,6 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
 (server-start)
 #+end_src
 ** Doom base config                                                   :doom:
-*** Use
-| =SPC h v=                  | Describes a variable |
-| =SPC o t= / =vterm/toggle= |                      |
-| =SPC o T= / =vterm/here=   |                      |
-*** How to =reload= the config?
-- =C-c C-v t= to tangle this file or init.el / =org-babel-tangle=
-- =C-h r r= / =doom/reload=
-- doom/upgrade
-
 *** Config
 #+BEGIN_SRC emacs-lisp
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
@@ -144,9 +135,12 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+;; Set POSIX-compliant shell for internal Emacs processes
 (setq shell-file-name (executable-find "bash"))
-(setq-default explicit-shell-file-name "/bin/fish")
-(setq-default vterm-shell "/bin/fish")
+
+;; Keep interactive terminal (vterm/shell/etc) using fish
+(setq-default explicit-shell-file-name "/usr/bin/fish")
+(setq-default vterm-shell "/usr/bin/fish")
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -168,7 +162,14 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
               bidi-paragraph-direction 'nil)
 #+END_SRC
 
-** =org-mode= / Org                                               :org_mode:
+*** Basic use
+| =SPC h v=                  | Describes a variable    |
+| =SPC o t= / =vterm/toggle= | Opens a terminal frame  |
+| =SPC o T= / =vterm/here=   | Opens a terminal window |
+*** How to reload the config?
+- Use =ems-sync=
+** org-mode / Org                                                 :org_mode:
+*** Config
 #+BEGIN_SRC emacs-lisp
 (after! org
   ;; Appearance
@@ -190,7 +191,8 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
 
   ;; Modules
   (setq org-modules
-        '(org-habit org-protocol org-w3m))
+        '(org-habit org-protocol))
+        ;'(org-habit org-protocol org-w3m))
 
   ;; Logging
   (setq org-log-into-drawer "LOGBOOK"
@@ -255,14 +257,120 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
                                      (not buffer-read-only))
                             (vonpupp/org-add-ids-to-headlines-in-file)))
                         nil 'local)))
+  ;; Calendar
+  (setq calendar-week-start-day 1)
+
+  (copy-face font-lock-constant-face 'calendar-iso-week-face)
+  (set-face-attribute 'calendar-iso-week-face nil
+                      :height 0.7)
+  (setq calendar-intermonth-text
+        '(propertize
+          (format "W%02d"
+                  (car
+                   (calendar-iso-from-absolute
+                    (calendar-absolute-from-gregorian (list month day year)))))
+          'font-lock-face 'calendar-iso-week-face))
+
+  (copy-face 'default 'calendar-iso-week-header-face)
+  (set-face-attribute 'calendar-iso-week-header-face nil
+                      :height 0.7)
+  (setq calendar-intermonth-header
+        (propertize "W"                  ; or e.g. "KW" in Germany
+                    'font-lock-face 'calendar-iso-week-header-face))
+
+  (set-face-attribute 'calendar-iso-week-face nil
+                        :height 1.0 :foreground "salmon")
+
+  ;; org-babel
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+    '((emacs-lisp . t)
+    (python . t)
+    (jupyter . t)
+    (ein . t)
+    (ipython . t)
+    (sclang . t)
+    (ditaa . t)
+    (lilypond t)
+    ))
 )
 
 (after! ox
   (require 'ox-extra)
   (ox-extras-activate '(ignore-headlines)))
+
 #+END_SRC
 
-** =org-roam= / Roam                                         :org_mode:apps:
+** org-protocol / capture templates                               :org_mode:
+*** Config
+#+BEGIN_SRC emacs-lisp
+  ;; Doc: https://github.com/sprig/org-capture-extension
+  ;; (defun transform-square-brackets-to-round-ones(string-to-transform)
+  ;;   "Transforms [ into ( and ] into ), other chars left unchanged."
+  ;;   (concat
+  ;;    (mapcar #'(lambda (c) (if (equal c ?[) ?\( (if (equal c ?]) ?\) c))) string-to-transform))
+  ;;   )
+
+  ;; CAPTURE
+(after! org
+  ;; org all setting start here
+  ;; start org-protocol
+  (require 'org-protocol)
+
+  ;; with eval after load org
+  (with-eval-after-load 'org
+    ;; org-protocol
+    (add-to-list 'org-modules 'org-protocol))
+  (setq org-capture-templates
+    '(
+      ;; Doc: https://github.com/sprig/org-capture-extension
+      ;; Doc: https://gist.github.com/cjp/64ac13f5966456841c197f70c7d3a53a
+      ("p" "Protocol" entry (file+headline "~/org/capture.org" "Inbox")
+        "* [[%:link][%:description]]\n- Source: %:link\n- Title: %:description\n#+BEGIN_QUOTE\n%i\n#+END_QUOTE\n")
+      ("L" "Browser link" entry (file+headline "~/org/capture.org" "Inbox")
+        "* [[%:link][%:description]]\n- Source: %:link\n- Title: %:description\n- Captured on: %u\n")
+
+      ;; Templates for the TASKS keyword sequence
+      ("t" "Tasks")
+
+      ;; TEMPLATE A
+      ("th" "SMART Habit" entry (file org-default-capture-file)
+       "* REPEAT %^{Describe the task}       :HABIT:
+  %?
+  SCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d>>\")
+  :STYLE:    habit
+  :SMART:
+  :Specific:   %^{What is the purpose of this goal}
+  :Measurable: %^{How can you measure it}
+  :Activity:   %^{What activity do we need to do}
+  :Resources:  %^{What resources do we need}
+  :Timebox:    %^{What time do we need to spend on that}
+  :Reviewed:
+  :LOGBOOK:
+  - Recorded: %U
+  :HoursWeek:  Get it automatically
+  :END:" :empty-lines 1)
+  )))
+#+END_SRC
+
+*** Quick how to use org-protocol / capture templates
+- [[id:5f48cafd-14d1-40e0-ae00-77b35d8542ef][Capturing using templates]]
+- I have set up some mappings on tridactyl to ease the process of capturing:
+  - =,l= for capturing links
+  - =,s= for capturing selected text
+  - =,r= for capturing using org-roam
+
+Or, use the following extensions:
+- Chrome: [[https://chrome.google.com/webstore/detail/org-capture/kkkjlfejijcjgjllecmnejhogpbcigdc]]
+- Firefox: [[https://addons.mozilla.org/en-US/firefox/addon/org-capture/]]
+
+Once installed an icon on the top of the browser should appear. To setup the
+handler and the templates read: [[https://github.com/sprig/org-capture-extension]]
+
+The '(server-start)' is needed. So start emacs using =em=
+
+** org-roam / Roam                                           :org_mode:apps:
+*** Config
 #+BEGIN_SRC emacs-lisp
 (use-package! org-roam
   ;:after (org emacsql-sqlite-builtin)
@@ -350,8 +458,239 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
 
 ;  (set-company-backend! 'org-mode '(company-capf)))
 #+END_SRC
+** org-reverse-datetree                                      :org_mode:apps:
+*** Config
+#+BEGIN_SRC emacs-lisp
+(use-package! org-reverse-datetree
+  :after org
+  )
+#+END_SRC
+
+*** Integration with super agenda
+#+BEGIN_SRC emacs-lisp
+(setq org-agenda-custom-commands
+  '(("r" "Y2024 Reverse daily tasks"
+     ;org-ql-block '(and (level 4) (todo)
+     ;                  (< (- (float-time (org-reverse-datetree-guess-date))
+     ;                        (float-time))
+     ;                     (* 3600 24 14))
+     ;))))
+     ;(
+      (org-super-agenda-groups
+       '((:todo "DONE")
+         (:todo t)))
+      (org-agenda-files '("~/org/exobrain/20231120231619-daily_tasks_log_y2024.org")
+                        (org-agenda nil "a")
+                        ))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (org-ql-block '(level 2))
+#+END_SRC
 
 #+RESULTS:
 
-** TODOs
+#+BEGIN_SRC emacs-lisp
+  (org-ql-block '(level 3))
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC emacs-lisp
+  (org-ql-block '(level 4))
+#+END_SRC
+*** Quick how to use org-reverse-datetree
+- Add the following header section:
+  #+BEGIN_EXAMPLE
+    #+REVERSE_DATETREE_DATE_FORMAT: %Y-%m-%d %a
+    #+REVERSE_DATETREE_WEEK_FORMAT: %Y-W%W
+    #+REVERSE_DATETREE_YEAR_FORMAT: %Y
+    #+REVERSE_DATETREE_USE_WEEK_TREE: t
+  #+END_EXAMPLE
+- Use =org-reverse-datetree-goto-date-in-file=
+- Pick the date
+- Notes: [[id:b35d9436-20bc-4c95-9666-adc6eaa31506][How to use org-reverse-datetree]]
+
+** openwith                                                      :apps:core:
+*** Config
+#+BEGIN_SRC emacs-lisp
+(use-package! openwith
+  :after-call pre-command-hook
+  :config
+  (openwith-mode -1)
+  (add-to-list 'openwith-associations '("\\.mp4\\'" "mpv" (file)))
+  (add-to-list 'openwith-associations '("\\.mp3\\'" "mpv" (file)))
+  (add-to-list 'openwith-associations '("\\.png\\'" "shotwell" (file)))
+  (add-to-list 'openwith-associations '("\\.pdf\\'" "zathura" (file)))
+)
+
+; Disable by default
+(add-hook 'after-init-hook 'openwith-mode -1)
+#+END_SRC
+
+*** Quick how to use openwith
+*IMPORTANT NOTE*
+- To open PDF's on emacs =disable= the =openwith-mode=, and click a pdf file.
+- To open PDF's on zathura, just click the pdf file (=openwith-mode= is enabled
+  by default)
+- Test link: [[~/org-media/20200822194657-books_to_read/guitartheoryrevolution.info-gtrbook1.pdf]]
+- It should open with zathura
+
+** browse-url-browser-function                                        :core:
+*** Config
+#+BEGIN_SRC emacs-lisp
+(defun mpv-play-url (url &rest args)
+  ""
+  (interactive)
+  (call-process "mpv" nil 0 nil "--player-operation-mode=pseudo-gui" url))
+
+;(defun firefox-browse-url (url &rest args)
+;  ""
+;  (interactive)
+;  (call-process "firefox" nil 0 nil url))
+;
+;(defun ice-firefox-browse-url (url &rest args)
+;  ""
+;  (interactive)
+;  (call-process "ice-firefox.sh" nil 0 nil url))
+
+(defun ice-trading-browse-url (url &rest args)
+  ""
+  (interactive)
+  (call-process "ice-trading.sh" nil 0 nil url))
+
+(defun chromium-browse-url (url &rest args)
+  ""
+  (interactive)
+  (call-process "chromium" nil 0 nil url))
+
+(defun zathura-open-url (url &rest args)
+  ""
+  (interactive)
+  (call-process "zathura" nil 0 nil url))
+
+;(setq browse-url-browser-function
+;  (quote (
+;    ("tradingview\\.?com" . ice-trading-browse-url)
+;    ("youtu\\.?be" . mpv-play-url)
+;    ("youtube\\.?com" . mpv-play-url)
+;    ("audio\\.esv\\.?org" . mpv-play-url)
+;    (".\\.pdf" . zathura-open-url))))
+;    ;("." . chromium-browse-url))))
+;    ;("." . eww-browse-url))))
+;
+;; https://emacs.stackexchange.com/questions/11008/can-org-mode-open-a-link-in-external-browser-when-using-prefix-key
+;(defun my-org-open-at-point (&optional arg)
+;  (interactive "P")
+;  (if (not arg)
+;      (org-open-at-point)
+;      (let ((browse-url-browser-function #'chromium-browse-url))
+;        (org-open-at-point))))
+
+(defun browse-url-firefox (url &optional _new-window)
+  "Open URL with Firefox."
+  (start-process "firefox" nil "firefox" url))
+
+(after! org
+  (setq browse-url-handlers
+        '(
+          ("tradingview\\.?com" . ice-trading-browse-url)
+          ("youtu\\.?be" . mpv-play-url)
+          ("youtube\\.?com" . mpv-play-url)
+          ("audio\\.esv\\.?org" . mpv-play-url)
+          ("http" . browse-url-firefox)
+          ("https" . browse-url-firefox)
+          (".\\.pdf" . zathura-open-url)
+          ;("." . chromium-browse-url)
+          ;("." . eww-browse-url)
+          ("ftp" . browse-url-firefox)))
+        )
+#+END_SRC
+*** Quick how to use browse-url-browser-function
+This snippets will open links on youtube with mpv and any file ending in pdf
+with zathura. This is still work in progress.
+
+I have moved away from =start-process= to =call-process= because the process is
+not anchored to emacs, so I can still close emacs and continue the process if
+needed. This probably need tweaks on MS Windows, but since I don't use it, I
+just don't care. Read more [[https://emacs.stackexchange.com/questions/22363/possible-to-detach-a-child-process/65040#65040][here]].
+
+Test link: https://www.youtube.com/watch?v=fWmZoaTvA8k
+It should open with mpv
+
+** magit / Git                                                   :apps:core:
+*** Config
+#+BEGIN_SRC emacs-lisp
+;; Flyspell commit messages
+(add-hook 'git-commit-setup-hook 'git-commit-turn-on-flyspell)
+#+END_SRC
+*** Quick how to use magit
+- Notes: [[id:da84ced2-888f-4c20-8934-cb3ae037846c][How to use magit]]
+** org-ql                                                    :org_mode:apps:
+*** Config
+#+BEGIN_SRC emacs-lisp
+(use-package! org-ql
+  :after org
+  ;;(require 'org-ql)
+)
+#+END_SRC
+*** Quick how to use org-ql
+- Just =C-c C-c= on this block
+  #+BEGIN: org-ql :query "todo:" :columns ((priority "P") ((property "milestone") "M") (todo "org") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
+  | P | M | org  | Heading                               |
+  |---+---+------+---------------------------------------|
+  |   |   | TODO | [[Emacs server + CLI/GUI clients][Emacs server + CLI/GUI clients]]        |
+  |   |   | TODO | [[Review which files are able to refile][Review which files are able to refile]] |
+  |   |   | TODO | [[ox-json][ox-json]]                               |
+  |   |   | TODO | [[ob-translate][ob-translate]]                          |
+  |   |   | TODO | [[ob-browser][ob-browser]]                            |
+  |   |   | TODO | [[org-super-agenda][org-super-agenda]]                      |
+  |   |   | TODO | [[org-kanban][org-kanban]]                            |
+  |   |   | TODO | [[poet theme for writing?][poet theme for writing?]]               |
+  #+END:
+- Notes: [[id:9a551e35-2ce8-4eee-a711-e1776c19fa8d][How to use org-ql]]
+
+** anki-editor / Anki                                        :apps:learning:
+*** Config
+#+BEGIN_SRC emacs-lisp
+(use-package! anki-editor
+  :after org
+  :config
+    (setq anki-editor-create-decks t
+          anki-editor-org-tags-as-anki-tags t))
+
+
+(map! :localleader
+      :map org-mode-map
+      (:prefix ("a" . "Anki")
+        :desc "Push" "p" 'anki-editor-push-notes
+        :desc "Retry" "r" 'anki-editor-retry-failure-notes
+        :desc "Insert" "n" 'anki-editor-insert-note
+        (:prefix ("c" . "Cloze")
+          :desc "Dwim" "d" 'anki-editor-cloze-dwim
+          :desc "Region" "r" 'anki-editor-cloze-region
+          )
+        )
+ )
+#+END_SRC
+
+*** Quick how to use anki-editor
+- Open Anki
+- =anki-editor-mode=
+- =anki-editor-push-notes=
+- Notes: [[id:09a66f47-2588-4dd0-b836-0d5e31fd6bcc][How to create an anki deck using org-mode]]
+
+** [0%] Tasks [0%] [0/7]                                          :noexport:
 *** TODO Emacs server + CLI/GUI clients
+*** TODO Review which files are able to refile
+*** TODO ox-json
+- https://www.reddit.com/r/emacs/comments/ccwl4r/i_made_a_json_export_back_end_for_org_mode/
+*** TODO ob-translate
+- https://github.com/krisajenkins/ob-translate
+*** TODO ob-browser
+- https://github.com/krisajenkins/ob-browser
+*** TODO org-super-agenda
+*** TODO org-kanban
+- https://github.com/lijigang/ljg-dotfile/blob/master/spacemacs-config.org
+*** TODO poet theme for writing?
+*** FIX edit-server
