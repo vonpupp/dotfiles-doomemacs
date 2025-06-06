@@ -39,6 +39,32 @@ doom profile sync --all
 ~/.config/emacs/bin/doom doctor --doomdir ~/.config/doom.stable --emacsdir ~/.config/emacs
 #+END_SRC
 
+** Emacs server
+*** Use
+#+BEGIN_SRC sh :tangle no
+export DOOMDIR="$HOME/.config/doom.stable"
+export EMACSDIR="$HOME/.config/emacs"
+
+emacsclient --socket-name=doom-stable -n -e "(if (> (length (frame-list)) 1) 't)" | grep -q t
+exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
+#+END_SRC
+
+*** Config
+#+begin_src emacs-lisp
+(setq server-name "doom-stable")
+(server-start)
+#+end_src
+** Doom base config                                                   :doom:
+*** Use
+| =SPC h v=                  | Describes a variable |
+| =SPC o t= / =vterm/toggle= |                      |
+| =SPC o T= / =vterm/here=   |                      |
+*** How to =reload= the config?
+- =C-c C-v t= to tangle this file or init.el / =org-babel-tangle=
+- =C-h r r= / =doom/reload=
+- doom/upgrade
+
+*** Config
 #+BEGIN_SRC emacs-lisp
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
@@ -48,8 +74,8 @@ doom profile sync --all
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
-;; (setq user-full-name "John Doe"
-;;       user-mail-address "john@doe.com")
+(setq user-full-name (or (getenv "EMACS_USER_FULL_NAME") "Anonymous User")
+      user-mail-address (or (getenv "EMACS_USER_EMAIL_ADDRESS") "anon@example.com"))
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
@@ -84,8 +110,7 @@ doom profile sync --all
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/org/")
-
+(setq org-directory (or (getenv "EMACS_ORG_DIRECTORY") "~/org"))
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
@@ -122,4 +147,211 @@ doom profile sync --all
 (setq shell-file-name (executable-find "bash"))
 (setq-default explicit-shell-file-name "/bin/fish")
 (setq-default vterm-shell "/bin/fish")
+
+;; This determines the style of line numbers in effect. If set to `nil', line
+;; numbers are disabled. For relative line numbers, set this to `relative'.
+(setq display-line-numbers-type t)
+
+;; No confirm on exit
+(setq confirm-kill-emacs nil)
+
+(setq doom-unicode-font (font-spec :family "Cardo"))
+;(setq doom-variable-pitch-font (font-spec :family "Ezra"))
+;(setq doom-font (font-spec :family "JetBrains Mono" :size 24)
+;      doom-big-font (font-spec :family "JetBrains Mono" :size 36)
+;      doom-variable-pitch-font (font-spec :family "Overpass" :size 24)
+;      doom-unicode-font (font-spec :family "JuliaMono")
+;      doom-serif-font (font-spec :family "IBM Plex Mono" :weight 'light))
+
+; See: https://www.reddit.com/r/DoomEmacs/comments/llow52/rtl_languages/
+(setq-default bidi-display-reordering 't
+              bidi-paragraph-direction 'nil)
 #+END_SRC
+
+** =org-mode= / Org                                               :org_mode:
+#+BEGIN_SRC emacs-lisp
+(after! org
+  ;; Appearance
+  (setq org-ellipsis " ▼ "
+        org-tags-column -77)
+
+  ;; Source block indentation
+  (setq org-src-fontify-natively t
+        org-src-window-setup 'current-window
+        org-src-strip-leading-and-trailing-blank-lines t
+        org-src-preserve-indentation t
+        org-src-tab-acts-natively t)
+
+  (setq my-org-directory (or (getenv "EMACS_MY_ORG_DIRECTORY") "~/org")
+      my-org-roam-directory (or (getenv "EMACS_MY_ORG_ROAM_DIRECTORY") "~/org/roam")
+      my-org-journal-directory (or (getenv "EMACS_MY_ORG_JOURNAL_DIRECTORY") "~/org/journal")
+      org-default-capture-file (or (getenv "EMACS_ORG_DEFAULT_CAPTURE_FILE") "~/org/capture.org")
+      my-org-notes (or (getenv "EMACS_MY_ORG_NOTES") "~/org/notes"))
+
+  ;; Modules
+  (setq org-modules
+        '(org-habit org-protocol org-w3m))
+
+  ;; Logging
+  (setq org-log-into-drawer "LOGBOOK"
+        org-log-reschedule 'note)
+
+  ;; Inheritance
+  (setq org-use-property-inheritance
+        '("project" "agenda-group"))
+
+  ;; Misc
+  (setq org-insert-heading-respect-content t
+        org-latex-inputenc-alist '(("" . ("utf8" . "utf8x")))
+        org-confirm-babel-evaluate nil)
+
+  ;; File association
+  (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
+
+  ;; Org ID logic
+  (require 'uuidgen)
+  (setq org-id-link-to-org-use-id
+        'create-if-interactive-and-no-custom-id
+        org-id-locations-file (concat my-org-directory ".org-id-locations"))
+
+  ;; Disable hl-todo-mode in org
+  (add-hook 'org-mode-hook (lambda () (hl-todo-mode -1)))
+
+  ;; Accept local variable in .dir-locals.el
+  (put 'org-todo-keyword-faces 'safe-local-variable #'listp)
+
+  ;; Hotkey override
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (local-set-key (kbd "C-c C-/") #'my-org-open-at-point)))
+
+  ;; Auto-generate IDs if `#+OPTIONS: auto-id:t` is in file
+  (defun vonpupp/org-custom-id-get (&optional pom create prefix)
+    (interactive)
+    (org-with-point-at pom
+      (let ((id (org-entry-get nil "ID")))
+        (cond
+         ((and id (stringp id) (string-match "\\S-" id)) id)
+         (create
+          (setq id (org-id-new))
+          (org-entry-put pom "ID" id)
+          (org-id-add-location id (buffer-file-name (buffer-base-buffer)))
+          id)))))
+
+  (defun vonpupp/org-add-ids-to-headlines-in-file ()
+    (interactive)
+    (save-excursion
+      (widen)
+      (goto-char (point-min))
+      (when (re-search-forward "^#\\+OPTIONS:.*auto-id:t" (point-max) t)
+        (org-map-entries
+         (lambda () (vonpupp/org-custom-id-get (point) 'create))))))
+
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook
+                        (lambda ()
+                          (when (and (eq major-mode 'org-mode)
+                                     (not buffer-read-only))
+                            (vonpupp/org-add-ids-to-headlines-in-file)))
+                        nil 'local)))
+)
+
+(after! ox
+  (require 'ox-extra)
+  (ox-extras-activate '(ignore-headlines)))
+#+END_SRC
+
+** =org-roam= / Roam                                         :org_mode:apps:
+#+BEGIN_SRC emacs-lisp
+(use-package! org-roam
+  ;:after (org emacsql-sqlite-builtin)
+  ;:commands (org-roam-node-insert org-roam-node-find org-roam-switch-to-buffer org-roam)
+  ;:hook
+  ;(after-init . org-roam-setup)
+  :after (org emacsql-sqlite-builtin)
+  :hook (after-init . org-roam-setup)
+  :init
+  (setq org-roam-directory
+      (file-truename
+       (or (getenv "EMACS_ORG_ROAM_DIRECTORY")
+           "~/org/roam/"))
+      org-roam-database-connector 'sqlite-builtin
+      org-roam-db-gc-threshold most-positive-fixnum
+      org-id-link-to-org-use-id t
+      org-roam-graphviz-executable "/usr/bin/dot"
+      org-roam-dailies-directory "journal/"
+      org-roam-graph-exclude-matcher "private"
+      org-roam-tag-sources '(prop last-directory))
+
+  (map! :leader
+        :prefix "r"
+        :desc "org-roam-buffer-toggle" "l" #'org-roam-buffer-toggle
+        :desc "org-roam-insert" "i" #'org-roam-insert
+        :desc "org-roam-switch-to-buffer" "b" #'org-roam-switch-to-buffer
+        :desc "org-roam-node-find" "f" #'org-roam-node-find
+        :desc "org-roam-graph-show" "g" #'org-roam-graph
+        ;:desc "org-roam-node-insert" "i" #'org-roam-node-insert
+        :desc "org-roam-capture" "c" #'org-roam-capture
+        :desc "org-roam-dailies-capture-today" "j" #'org-roam-dailies-capture-today
+        :desc "deft" "s" #'deft)
+  ;(setq org-roam-v2-ack t)
+  :config
+  (org-roam-setup)
+  (org-roam-db-autosync-mode +1))
+
+;(use-package! org-roam
+;  :defer t
+;  :config
+;    (setq
+;        org-roam-db-location (file-truename "~/org/org-roam.db")
+;        org-attach-id-dir "assets/"
+;    (org-roam-db-autosync-enable)))
+
+(use-package! websocket
+    :after org-roam)
+
+(use-package! org-roam-ui
+    :after org-roam
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
+
+(after! (org-roam)
+  (winner-mode +1)
+  (map! :map winner-mode-map
+        "<M-right>" #'winner-redo
+        "<M-left>" #'winner-undo))
+
+;(map! :map evil-org-mode-map
+;      :leader
+;      (:prefix ("r")
+;       :desc "Insert node"
+;       "i" #'org-roam-node-insert
+;       :desc "Find node"
+;       "f" #'org-roam-node-find
+;       :desc "Journal today"
+;       "j" #'org-roam-dailies-capture-today
+;       :desc "Capture to node"
+;       "c" #'org-roam-capture
+;       :desc "Toggle roam buffer"
+;       "b" #'org-roam-buffer-toggle
+;       :desc "Open random note"
+;       "r" #'org-roam-node-random
+;       :desc "Visit node"
+;       "v" #'org-roam-node-visit
+;       :desc "Visit node"
+;       "s" #'deft
+;       :desc "Open ORUI"
+;       "u" #'org-roam-ui-open))
+
+
+;  (set-company-backend! 'org-mode '(company-capf)))
+#+END_SRC
+
+#+RESULTS:
+
+** TODOs
+*** TODO Emacs server + CLI/GUI clients

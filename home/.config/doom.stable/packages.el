@@ -47,3 +47,9 @@
 ;; (unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
+
+(package! uuidgen
+  :recipe (:host github
+           :repo "kanru/uuidgen-el"
+           :branch "master"))
+(package! org-roam)
