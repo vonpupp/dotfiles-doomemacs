@@ -1,4 +1,11 @@
-* My Doom Emacs config
+* My new Doom Emacs config
+:PROPERTIES:
+:ID:       2ee07ce8-6bd2-48d2-8739-fae917e98bfe
+:header-args: :tangle ~/.homesick/repos/dotfiles-doomemacs/home/.config/doom.stable/config.el :comments none
+:END:
+
+[[~/.homesick/repos/dotfiles-doomemacs/home/.config/doom.stable/init.el]]
+[[~/.homesick/repos/dotfiles-doomemacs/home/.config/doom.stable/packages.el]]
 
 My nth+1 attempt to config Doom Emacs.
 
@@ -39,6 +46,8 @@ doom profile sync --all
 ~/.config/emacs/bin/doom doctor --doomdir ~/.config/doom.stable --emacsdir ~/.config/emacs
 #+END_SRC
 
+Read my old installation documentation: [[id:e2db993c-a5e4-4872-b6bd-1a3fc27ebe87][How to install Doom Emacs]]
+
 ** Emacs server
 *** Use
 #+BEGIN_SRC sh :tangle no
@@ -50,12 +59,18 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
 #+END_SRC
 
 *** Config
+:PROPERTIES:
+:ID:       f04e504e-75d4-4826-9b08-74da57a7c034
+:END:
 #+begin_src emacs-lisp
 (setq server-name "doom-stable")
 (server-start)
 #+end_src
 ** Doom base config                                                   :doom:
 *** Config
+:PROPERTIES:
+:ID:       0b9477f0-e538-4dae-a542-5809ef7e9ff0
+:END:
 #+BEGIN_SRC emacs-lisp
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
@@ -170,6 +185,9 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
 - Use =ems-sync=
 ** org-mode / Org                                                 :org_mode:
 *** Config
+:PROPERTIES:
+:ID:       0d21d3f5-1dc8-4b55-b41b-bdeafd4cb6a5
+:END:
 #+BEGIN_SRC emacs-lisp
 (after! org
   ;; Appearance
@@ -228,7 +246,7 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
               (local-set-key (kbd "C-c C-/") #'my-org-open-at-point)))
 
   ;; Auto-generate IDs if `#+OPTIONS: auto-id:t` is in file
-  (defun vonpupp/org-custom-id-get (&optional pom create prefix)
+  (defun my/org-custom-id-get (&optional pom create prefix)
     (interactive)
     (org-with-point-at pom
       (let ((id (org-entry-get nil "ID")))
@@ -240,14 +258,14 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
           (org-id-add-location id (buffer-file-name (buffer-base-buffer)))
           id)))))
 
-  (defun vonpupp/org-add-ids-to-headlines-in-file ()
+  (defun my/org-add-ids-to-headlines-in-file ()
     (interactive)
     (save-excursion
       (widen)
       (goto-char (point-min))
       (when (re-search-forward "^#\\+OPTIONS:.*auto-id:t" (point-max) t)
         (org-map-entries
-         (lambda () (vonpupp/org-custom-id-get (point) 'create))))))
+         (lambda () (my/org-custom-id-get (point) 'create))))))
 
   (add-hook 'org-mode-hook
             (lambda ()
@@ -255,7 +273,7 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
                         (lambda ()
                           (when (and (eq major-mode 'org-mode)
                                      (not buffer-read-only))
-                            (vonpupp/org-add-ids-to-headlines-in-file)))
+                            (my/org-add-ids-to-headlines-in-file)))
                         nil 'local)))
   ;; Calendar
   (setq calendar-week-start-day 1)
@@ -297,12 +315,26 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
 
 (after! ox
   (require 'ox-extra)
+  ;(require 'ox-taskjuggler)
   (ox-extras-activate '(ignore-headlines)))
 
+;; TaskJuggler
+;; Make sure ~/.doom.d/lisp is on the load-path early
+(add-to-list 'load-path (expand-file-name "~/.config/doom.stable/lisp"))
+;; Load the TaskJuggler exporter
+(when (locate-library "ox-taskjuggler")
+  (require 'ox-taskjuggler))
+;; If the file is named org-taskjuggler.el, require that instead:
+;(require 'org-taskjuggler)
+;; Set the target version (tj3) if you use TaskJuggler 3.x
+(setq org-taskjuggler-target-version 3.4)
 #+END_SRC
 
 ** org-protocol / capture templates                               :org_mode:
 *** Config
+:PROPERTIES:
+:ID:       cbd32a97-24f6-4e98-a852-faa0653d08f0
+:END:
 #+BEGIN_SRC emacs-lisp
   ;; Doc: https://github.com/sprig/org-capture-extension
   ;; (defun transform-square-brackets-to-round-ones(string-to-transform)
@@ -371,6 +403,9 @@ The '(server-start)' is needed. So start emacs using =em=
 
 ** org-roam / Roam                                           :org_mode:apps:
 *** Config
+:PROPERTIES:
+:ID:       8bc383a8-7758-454b-86e4-5b5158d378b9
+:END:
 #+BEGIN_SRC emacs-lisp
 (use-package! org-roam
   ;:after (org emacsql-sqlite-builtin)
@@ -384,6 +419,9 @@ The '(server-start)' is needed. So start emacs using =em=
       (file-truename
        (or (getenv "EMACS_ORG_ROAM_DIRECTORY")
            "~/org/roam/"))
+      (org-roam-db-location
+       (or (getenv "EMACS_ORG_ROAM_DB_LOCATION")
+           "~/org/exobrain/org-roam.db"))
       org-roam-database-connector 'sqlite-builtin
       org-roam-db-gc-threshold most-positive-fixnum
       org-id-link-to-org-use-id t
@@ -433,6 +471,10 @@ The '(server-start)' is needed. So start emacs using =em=
         "<M-right>" #'winner-redo
         "<M-left>" #'winner-undo))
 
+(setq org-roam-db-node-include-function
+  (lambda ()
+    (not (member "ROAM_EXCLUDE" (org-get-tags)))))
+
 ;(map! :map evil-org-mode-map
 ;      :leader
 ;      (:prefix ("r")
@@ -460,6 +502,9 @@ The '(server-start)' is needed. So start emacs using =em=
 #+END_SRC
 ** org-reverse-datetree                                      :org_mode:apps:
 *** Config
+:PROPERTIES:
+:ID:       af4e4dd4-648f-4ee9-97d9-accdc3485928
+:END:
 #+BEGIN_SRC emacs-lisp
 (use-package! org-reverse-datetree
   :after org
@@ -467,6 +512,9 @@ The '(server-start)' is needed. So start emacs using =em=
 #+END_SRC
 
 *** Integration with super agenda
+:PROPERTIES:
+:ID:       a499a6b7-2db3-4a0f-8b28-21cd86e22925
+:END:
 #+BEGIN_SRC emacs-lisp
 (setq org-agenda-custom-commands
   '(("r" "Y2024 Reverse daily tasks"
@@ -511,8 +559,206 @@ The '(server-start)' is needed. So start emacs using =em=
 - Pick the date
 - Notes: [[id:b35d9436-20bc-4c95-9666-adc6eaa31506][How to use org-reverse-datetree]]
 
+** org-pomodoro
+*** Config
+:PROPERTIES:
+:ID:       4c28d495-608e-4ffb-8989-c8f00e0b45ad
+:END:
+#+BEGIN_SRC emacs-lisp
+(!package org-pomodoro
+  :ensure t
+  :commands (org-pomodoro)
+  :config
+  (setq
+   org-pomodoro-length 25
+   org-pomodoro-short-break-length 5
+   ))
+#+END_SRC
+** TODO org-download                                         :org_mode:apps:
+*** Config
+:PROPERTIES:
+:ID:       cb42ceb8-2831-49d9-9e5a-6b20d51b9beb
+:END:
+
+#+DOWNLOADED: https://www.vecteezy.com/photo/24622674-abstract-multi-colored-backdrop-ink-waves-of-blue-paint-generated-by-ai @ 2025-06-06 17:51:20
+[[file:../../../../../../org-media/config/24622674-abstract-multi-colored-backdrop-ink-waves-of-blue-paint-generated-by-ai]]
+
+
+#+BEGIN_SRC emacs-lisp
+(setq org-image-actual-width 500)
+(setq org-startup-with-inline-images t)
+(setq org-display-inline-images t)
+(setq org-redisplay-inline-images t)
+
+(use-package! org-download
+  :after org
+  :commands
+  org-download-dnd
+  org-download-yank
+  org-download-screenshot
+  org-download-dnd-base64
+  :init
+  (map! :map org-mode-map
+        "s-<print>" #'org-download-screenshot
+        "s-y" #'org-download-yank)
+
+  (pushnew! dnd-protocol-alist
+            '("^\\(?:https?\\|ftp\\|file\\|nfs\\):" . org-download-dnd)
+            '("^data:" . org-download-dnd-base64))
+
+  (after! org
+    (org-add-link-type "xdg" (lambda (path) (browse-url-xdg-open path))))
+
+  :config
+  (defun +org/org-download-method (link)
+    (let* ((basename (or (file-name-base buffer-file-name) "default"))
+           (filename (file-name-nondirectory (car (url-path-and-query (url-generic-parse-url link)))))
+           (dirname (expand-file-name
+                     (concat "~/org-media/"
+                             (replace-regexp-in-string " " "_" (downcase basename))))))
+      (make-directory dirname t)
+      (expand-file-name filename dirname)))
+
+  (setq org-download-method '+org/org-download-method)
+
+  (setq org-download-screenshot-method
+        (cond
+         (IS-MAC "screencapture -i %s")
+         (IS-LINUX
+          (cond
+           ((executable-find "flameshot") "flameshot gui --raw > %s")
+           ((executable-find "maim") "maim -u -s %s")
+           ((executable-find "scrot") "scrot -s %s")
+           (t (user-error "No screenshot tool found!")))))))
+
+
+;(use-package! org-download
+;  :after org
+;  :config
+;  ;; Add handlers for drag-and-drop when Org is loaded.
+;  (org-download-enable)
+;  (setq-default   org-download-method 'directory
+;                  org-download-heading-lvl nil
+;                  org-download-delete-image-after-download t
+;                  org-download-screenshot-method "echo"
+;                  ;; org-download-image-dir "~/org"
+;                  org-download-screenshot-file "/tmp/screenshot.png"
+;                  org-download-image-org-width 800
+;                  org-download-annotate-function '(lambda (_link) ""))
+;  ;; This section has been taken from https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el#L477
+;  (defun +org/org-download-method (link)
+;    (let* ((filename
+;            (file-name-nondirectory
+;             (car (url-path-and-query
+;                   (url-generic-parse-url link)))))
+;           ;; Create folder name with current buffer name, and place in root dir
+;           (dirname (concat "./images/"
+;                            (replace-regexp-in-string " " "_"
+;                                                      (downcase (file-name-base buffer-file-name)))))
+;           (filename-with-timestamp (format "%s%s.%s"
+;                                            (format-time-string org-download-timestamp)
+;                                            (file-name-sans-extension filename)
+;                                            (file-name-extension filename)))
+;      (make-directory dirname t)
+;      (expand-file-name filename-with-timestamp dirname))))
+;  :config
+;  (setq org-download-screenshot-method
+;        (cond (IS-MAC "screencapture -i %s")
+;              (IS-LINUX
+;               (cond ((executable-find "flameshot")  "flameshot gui --raw > %s")
+;                     ((executable-find "scrot") "scrot -s %s")))))
+;  (setq org-download-method '+org/org-download-method))
+#+END_SRC
+
+*** Quick how to use org-download
+- Just drag and drop the image to the file
+- A new =images/<holder-root-file (org file)>= folder will be created
+
+Clipboard usage
+- Use flameshot as usual and save the image to the clipboard
+- Use =M-x org-download-clipboard= and the image should be pasted
+
+Drag and drop usage
+- Use the file explorer and drag the desired image
+- If drag and dropping from firefox, the image will get a .nil extension (FIXME) (NOTE: doesn't seem to work on Chromium)
+
+Related configs:
+- https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el#L462
+- https://github.com/poligen/dotfiles/blob/25785810f9bf98f6eec93e400c686a4ad65ac310/doom.d/config.el#L118
+- https://ridaayed.github.io/posts/screenshots-emacs-org-mode-flameshot/
+- https://dotdoom.rgoswami.me/config.html
+
+*** TODO Check if =org-download-image-dir= is honored when it exists on the file
+
+** org-ql                                                    :org_mode:apps:
+*** Config
+:PROPERTIES:
+:ID:       d7cfc0fc-b26b-4d73-a7ea-3f2d4b945146
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! org-ql
+  :after org
+  ;;(require 'org-ql)
+)
+#+END_SRC
+*** Quick how to use org-ql
+- Just =C-c C-c= on this block
+  #+BEGIN: org-ql :query "todo:" :columns ((priority "P") ((property "milestone") "M") (todo "org") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
+  | P | M | org  | Heading                               |
+  |---+---+------+---------------------------------------|
+  |   |   | TODO | [[Emacs server + CLI/GUI clients][Emacs server + CLI/GUI clients]]        |
+  |   |   | TODO | [[Review which files are able to refile][Review which files are able to refile]] |
+  |   |   | TODO | [[ox-json][ox-json]]                               |
+  |   |   | TODO | [[ob-translate][ob-translate]]                          |
+  |   |   | TODO | [[ob-browser][ob-browser]]                            |
+  |   |   | TODO | [[org-super-agenda][org-super-agenda]]                      |
+  |   |   | TODO | [[org-kanban][org-kanban]]                            |
+  |   |   | TODO | [[poet theme for writing?][poet theme for writing?]]               |
+  #+END:
+- Notes: [[id:9a551e35-2ce8-4eee-a711-e1776c19fa8d][How to use org-ql]]
+
+** TODO org-noter + pdf-view                                 :org_mode:apps:
+*** Config
+:PROPERTIES:
+:ID:       dca88cbc-befd-48e7-befe-f2747d1ddaf9
+:END:
+#+BEGIN_SRC emacs-lisp
+(require 'org-noter)
+;; Define the auto-start function *outside* use-package!
+(defun my/org-noter-auto-start ()
+  "Auto-start org-noter when opening a PDF linked from an Org file."
+  (when (and (eq major-mode 'pdf-view-mode)
+             (buffer-file-name)
+             ;; Try to find the associated notes
+             (let ((notes (org-noter--get-notes-file)))
+               (and notes (file-exists-p notes))))
+    ;; Start org-noter
+    (org-noter)))
+
+(use-package! org-noter
+  :after (:any org pdf-view)
+  :config
+  (setq
+   ;; Window split behavior
+   org-noter-notes-window-location 'other-frame
+   org-noter-always-create-frame nil
+   org-noter-hide-other nil
+   org-noter-auto-save-last-location t
+   org-noter-notes-search-path
+   (list (or (getenv "EMACS_ORG_NOTES_SEARCH_PATH")
+             "~/org/notes")))
+
+  ;; Attach the hook
+  (add-hook 'pdf-view-mode-hook #'my/org-noter-auto-start))
+#+END_SRC
+*** Use
+- =M-x pdf-tools-install=
+- Open the pdf file and user =M-x org-noter=
 ** openwith                                                      :apps:core:
 *** Config
+:PROPERTIES:
+:ID:       b27fb619-18e0-4c58-b052-e133cd620ef9
+:END:
 #+BEGIN_SRC emacs-lisp
 (use-package! openwith
   :after-call pre-command-hook
@@ -538,6 +784,9 @@ The '(server-start)' is needed. So start emacs using =em=
 
 ** browse-url-browser-function                                        :core:
 *** Config
+:PROPERTIES:
+:ID:       5cdb635b-04b2-4d88-8028-6c9b95e73e6a
+:END:
 #+BEGIN_SRC emacs-lisp
 (defun mpv-play-url (url &rest args)
   ""
@@ -620,38 +869,144 @@ It should open with mpv
 
 ** magit / Git                                                   :apps:core:
 *** Config
+:PROPERTIES:
+:ID:       521c9584-b08b-44e5-84b9-5593f2ba1570
+:END:
 #+BEGIN_SRC emacs-lisp
 ;; Flyspell commit messages
 (add-hook 'git-commit-setup-hook 'git-commit-turn-on-flyspell)
 #+END_SRC
 *** Quick how to use magit
 - Notes: [[id:da84ced2-888f-4c20-8934-cb3ae037846c][How to use magit]]
-** org-ql                                                    :org_mode:apps:
+** beancount-mode                                          :apps:accounting:
 *** Config
+:PROPERTIES:
+:ID:       05ad1b9e-f158-4ebd-a9af-68b61940df89
+:END:
 #+BEGIN_SRC emacs-lisp
-(use-package! org-ql
-  :after org
-  ;;(require 'org-ql)
-)
+  (use-package! outshine
+    :init (defvar outline-minor-mode-prefix "\M-#")
+    :commands outshine-mode
+    :config
+     (map! :map outline-minor-mode-map
+           :nm [tab] #'beancount-outline-cycle
+           :nm [backtab] #'outshine-cycle-buffer)
+    :hook
+    (
+     (nix-mode . outshine-mode)
+     (after-init . outline-minor-mode)))
+     ;(outline-minor-mode . outshine-mode)
+     ;(beancount-mode . outshine-mode)
+  ; Source: https://www.reddit.com/r/emacs/comments/aay01i/announce_outshine_30_has_been_released/
+;  (require 'outshine)
+;  (add-hook 'beancount-mode-hook 'outshine-mode)
+
+  (use-package! beancount
+    :mode ("\\.beancount\\'" . beancount-mode)
+    :config
+    (setq beancount-electric-currency t)
+    (defun beancount-bal ()
+      "Run bean-report bal."
+      (interactive)
+      (let ((compilation-read-command nil))
+        (beancount--run "bean-report"
+                        (file-relative-name buffer-file-name) "bal")))
+    (map! :map beancount-mode-map
+          ;:n "TAB" #'beancount-align-to-previous-number
+          :i "RET" (cmd! (newline-and-indent) (beancount-align-to-previous-number))))
 #+END_SRC
-*** Quick how to use org-ql
-- Just =C-c C-c= on this block
-  #+BEGIN: org-ql :query "todo:" :columns ((priority "P") ((property "milestone") "M") (todo "org") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
-  | P | M | org  | Heading                               |
-  |---+---+------+---------------------------------------|
-  |   |   | TODO | [[Emacs server + CLI/GUI clients][Emacs server + CLI/GUI clients]]        |
-  |   |   | TODO | [[Review which files are able to refile][Review which files are able to refile]] |
-  |   |   | TODO | [[ox-json][ox-json]]                               |
-  |   |   | TODO | [[ob-translate][ob-translate]]                          |
-  |   |   | TODO | [[ob-browser][ob-browser]]                            |
-  |   |   | TODO | [[org-super-agenda][org-super-agenda]]                      |
-  |   |   | TODO | [[org-kanban][org-kanban]]                            |
-  |   |   | TODO | [[poet theme for writing?][poet theme for writing?]]               |
-  #+END:
-- Notes: [[id:9a551e35-2ce8-4eee-a711-e1776c19fa8d][How to use org-ql]]
+
+*** Quick how to use outshine / beancount-mode
+- Doc: https://github.com/syl20bnr/spacemacs/issues/5258
+- Open a beancount file with org-mode snippets and try to [un]fold the sections
+- Use =M-x outline-minor-mode= if needed to fold sections
+- Select som area of a beancount file and =C-c := or =M-x beancount-align-numbers= to verify that beancount-mode works
+** org-crypt / epa-file / GPG                                    :apps:core:
+*** Config
+:PROPERTIES:
+:ID:       27c72071-3777-4185-b4fa-cefad6c61d63
+:END:
+#+BEGIN_SRC emacs-lisp
+(setenv "GPG_AGENT_INFO" nil)
+
+(use-package! epa-file
+  ;; :ensure nil ;; included with Emacs
+  :config
+  (setq epa-file-encrypt-to
+        (let ((recipients (getenv "EMACS_EPA_FILE_ENCRYPT")))
+          (if recipients
+              ;; Split by comma if multiple recipients given
+              (split-string recipients ", *" t)
+            ;; fallback recipient if env var not set
+            '("user@example.com"))))
+  :custom
+  (epa-file-select-keys 'silent))
+
+(use-package! org-crypt
+  ;:ensure nil  ;; included with org-mode
+  :after org
+  :config
+  (org-crypt-use-before-save-magic)
+  (setq org-tags-exclude-from-inheritance (quote ("crypt")))
+  :custom
+  (org-crypt-key nil))
+#+END_SRC
+
+*** Quick how to symmetric encryption (GPG)
+- =org-encrypt-entry=
+- =org-decrypt-entry=
+Read: [[id:8d33a2ef-21a1-43ec-9e92-30567665ef30][How to encrypt on Emacs]]
+See: http://vsbabu.org/twenties/doom_emacs_org_1_to_10/
+
+*** Quick how to Asymmetric encryption (GPG)
+- User header: =# -*- epa-file-encrypt-to: ("<email>") -*-=
+- =epa-encrypt-file=
+- Select the org file to encrypt
+- Mark with =m= the recipient(s)
+- A file with gpg extension will be created
+Read: [[id:2d9469cb-b523-4326-9ebe-b9912a599dd3][How to encrypt a full file on Emacs]]
+
+** pass / otp                                                    :apps:core:
+*** Quick how to use pass
+=password-store-copy=
+=password-store-otp-token-copy=
+=password-store-copy-field=
+
+** ox-hugo / Hugo                                               :apps:devel:
+:PROPERTIES:
+:ID:       ac1607f9-d00e-4b2f-9351-6e16689a0161
+:END:
+#+BEGIN_SRC emacs-lisp
+  ;(defun my/conditional-hugo-enable ()
+  ;  (save-excursion
+  ;    (if (cdr (assoc "SETUPFILE" (org-roam--extract-global-props '("SETUPFILE"))))
+  ;        (org-hugo-auto-export-mode +1)
+  ;      (org-hugo-auto-export-mode -1))))
+
+  (use-package! ox-hugo
+    ;:ensure t
+    :after ox
+    :config
+      (setq org-hugo-external-file-extensions-allowed-for-copying
+        '("jpg" "jpeg" "tiff" "png" "svg" "gif"
+          "apkg"
+          "mp4"
+          "pdf" "odt"
+          "doc" "ppt" "xls"
+          "docx" "pptx" "xlsx"))
+      ;(add-hook 'org-mode-hook #'my/conditional-hugo-enable)
+  )
+#+END_SRC
+
+*** Quick how to use ox-hugo
+- Read: https://chaoruan.org/post/ox-hugo-install-issue-with-spacemacs/
+- Use =C-e H h= or =M-x org-hugo-export-as-md= to export the posts to the website
 
 ** anki-editor / Anki                                        :apps:learning:
 *** Config
+:PROPERTIES:
+:ID:       6e112f1c-c3e4-4743-bb4f-bfb054350ec1
+:END:
 #+BEGIN_SRC emacs-lisp
 (use-package! anki-editor
   :after org
@@ -679,6 +1034,40 @@ It should open with mpv
 - =anki-editor-mode=
 - =anki-editor-push-notes=
 - Notes: [[id:09a66f47-2588-4dd0-b836-0d5e31fd6bcc][How to create an anki deck using org-mode]]
+
+** org-babel-eval-in-repl / Python                              :apps:devel:
+*** Config
+:PROPERTIES:
+:ID:       0a5b1d62-0e09-4bef-a919-53296634c913
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! org-babel-eval-in-repl
+  :after org
+  :config
+  (setq eir-jump-after-eval nil)
+  )
+(with-eval-after-load "ob"
+  (require 'org-babel-eval-in-repl)
+  (define-key org-mode-map (kbd "C-c R") 'ober-eval-in-repl)
+  (define-key org-mode-map (kbd "C-c r") 'ober-eval-block-in-repl))
+#+END_SRC
+
+*** Quick how to use org-babel-eval-in-repl
+- =ober-eval-in-repl= to evaluate a single line
+- =ober-eval-block-in-repl= (or =C-c r=) to evaluate a block
+- Notes: [[id:2c9689fe-de13-4392-9619-a346e204571a][How to use org-babel-eval-in-repl]]
+- Read more: https://github.com/diadochos/org-babel-eval-in-repl
+
+- Test with these
+  #+BEGIN_SRC python :session "session1" :tangle no
+print("hi from sh shell sh1")
+print("hi1")
+  #+END_SRC
+
+  #+BEGIN_SRC python :session "session2" :tangle no
+print("hi from sh shell sh2")
+print("hi2")
+  #+END_SRC
 
 ** [0%] Tasks [0%] [0/7]                                          :noexport:
 *** TODO Emacs server + CLI/GUI clients

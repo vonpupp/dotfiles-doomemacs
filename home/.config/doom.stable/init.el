@@ -161,7 +161,7 @@
        (org               ; organize your plain life in plain text
         ;+dragndrop
         +roam2
-        +hugo
+        ;+hugo
         +pomodoro
         +noter
         +present

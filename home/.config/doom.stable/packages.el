@@ -52,13 +52,14 @@
   :recipe (:host github
            :repo "kanru/uuidgen-el"
            :branch "master"))
+(package! org-roam)
 (package! org-roam-ui
   :recipe (:host github
            :repo "org-roam/org-roam-ui"
            :files ("*.el" "out")
            :branch "main"))
-(package! org-roam)
 (package! org-reverse-datetree)
+(package! org-download)
 (package! org-ql)
 (package! openwith)
 (package! outshine)
@@ -68,3 +69,15 @@
            :branch "main"))
            ;:pin "3c04745fa539c25dc007683ad257239067c24cfe"))
 (package! anki-editor)
+(package! org-babel-eval-in-repl)
+(package! org-noter
+  :recipe (:host github
+           :repo "org-noter/org-noter"
+           :files ("*.el" "modules/*.el")
+           :branch "master"))
+;(package! org-contrib ; taskjuggler
+;  :recipe (:host github
+;           :repo "h-oll/ox-taskjuggler"
+;           :files ("lisp/*.el")))
+;(package! ox-taskjuggler
+;  :recipe (:host github :repo "tkf/org-mode" :files ("lisp/org-taskjuggler.el")))
