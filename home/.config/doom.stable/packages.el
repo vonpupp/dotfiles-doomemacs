@@ -60,6 +60,7 @@
            :branch "main"))
 (package! org-reverse-datetree)
 (package! org-download)
+(package! org-pomodoro)
 (package! org-ql)
 (package! openwith)
 (package! outshine)

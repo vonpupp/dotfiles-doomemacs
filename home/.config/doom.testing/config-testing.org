@@ -1,0 +1,2105 @@
+:PROPERTIES:
+:ID:       eb94bcf6-c0ad-4770-8a62-99859bcc875e
+:END:
+#+TITLE: My Doom Emacs config
+#+SETUPFILE:~/org/exobrain/hugo_setup_exobrain.org
+#+HUGO_SECTION: exobrain
+#+HUGO_CATEGORIES: english configs
+#+HUGO_TAGS: emacs
+#+STARTUP: overview
+#+STARTUP: indent
+#+STARTUP: inlineimages
+#+OPTIONS: auto-id:nil
+
+* My Doom Emacs config
+:PROPERTIES:
+:header-args: :tangle ~/.homesick/repos/dotfiles/home/.config/doom/config.el :comments none
+:END:
+** Disclaimer
+[[https://i.kym-cdn.com/photos/images/newsfeed/000/234/765/b7e.jpg]]
+
+Influences for my config
+*** [[https://tecosaur.github.io/emacs-config/config.html][Tecosaur Doom Emacs Configuration]]
+- Source: https://tecosaur.github.io/emacs-config/config.html
+- Title: Doom Emacs Configuration
+
+*** https://dotdoom.rgoswami.me/config.html
+*** https://www.grszkth.fr/blog/doom-config/
+*** https://www.ianjones.us/own-your-second-brain/
+*** https://github.com/jethrokuan/.emacs.d/blob/master/init.el
+
+** Assumptions
+- I use chemacs2
+- This file contains only what is tangled in the =packages.el= and =config.el= files.
+- The =init.el= file must be tangled separately.
+
+** How to install
+#+BEGIN_SRC sh :tangle no
+git clone git@github.com/plexus/chemacs2.git ~/.emacs.d/
+homeshick-link.sh dotfiles
+emacs-doom-sync.sh
+emacs-doom-upgrade.sh
+# ~/.emacs.d.doomemacs/bin/doom install
+emacs --with-profile doom &
+#+END_SRC
+
+Everytime the config is modified use =M-x doom/reload=. Alternatively use
+
+** How to update / troubleshoot doom emacs
+*** Failed to get unambiguous name for "..."
+- Go to =~/.doom.d/repos= and remove the repository with problems
+- Sync
+**** [[https://github.com/hlissner/doom-emacs/issues/4984#issuecomment-832842879][Impassable prompt: `Failed to get unambiguous name for "..."` on `doom upgrade` · Issue #4984 · hlissner/doom-emacs]]
+- Source: https://github.com/hlissner/doom-emacs/issues/4984#issuecomment-832842879
+- Title: Impassable prompt: `Failed to get unambiguous name for "..."` on `doom upgrade` · Issue #4984 · hlissner/doom-emacs
+- Captured on: [2021-12-24 Fri]
+** packages.el
+:PROPERTIES:
+:ID:       13cdac6c-70cf-44e3-b475-74a7b77f498f
+:header-args: :tangle ~/.homesick/repos/dotfiles/home/.config/doom/packages.el :comments none
+:END:
+#+BEGIN_SRC elisp
+  (package! auto-highlight-symbol)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (package! eyebrowse) ;; for layouts
+  (package! bm) ;; for bm layer
+  (package! evil-iedit-state) ;; for navigation
+  (package! bind-map)
+  (package! symbol-overlay)
+  (package! move-text) ;; for editing
+  (package! string-inflection) ;; for editing
+  (package! forge) ;; for github layer
+  (package! evil-terminal-cursor-changer) ;; for evil
+  (package! eshell-prompt-extras) ;; for shell layer
+  (package! mu4e-alert)
+
+  (package! uuidgen
+    :recipe (:host github
+             :repo "kanru/uuidgen-el"
+             :branch "master"))
+
+  (package! org-download)
+
+  (package! org-roam)
+  ;(package! org-roam
+  ;  :recipe (:host github
+  ;           :repo "org-roam/org-roam"
+  ;           :branch "main"))
+  ;(unpin! org-roam)
+  (package! org-roam-ui
+    :recipe (:host github
+             :repo "org-roam/org-roam-ui"
+             :files ("*.el" "out")
+             :branch "main"))
+  ;(package! emacsql-sqlite-builtin)
+  ;(package! org-roam-server
+  ;  :recipe (:host github
+  ;           :repo "org-roam/org-roam-server"
+  ;           :branch "master"))
+  (package! org-ql)
+  ;  :recipe (:host github
+  ;           :repo "alphapapa/org-ql"
+  ;           :files ("*.el")
+  ;           :branch "master"))
+  (package! beancount
+    :recipe (:host github
+             :repo "beancount/beancount-mode"
+             :branch "main"))
+             ;:pin "3c04745fa539c25dc007683ad257239067c24cfe"))
+
+  (package! openwith)
+  (package! anki-editor)
+  (package! outshine)
+  (package! emmet-mode)
+  (package! nov)        ;; epub layer
+  (package! dtk)
+  (package! org-reverse-datetree)
+  (package! org-babel-eval-in-repl)
+  (package! citeproc)
+  ;(package! oer-reveal)
+  ;(package! org-re-reveal-citeproc)
+
+  ;(package! lsp-tailwindcss
+  ;  :recipe (:host github
+  ;           :repo "merrickluo/lsp-tailwindcss"))
+  ; Removed for the time being due to an upgrade break
+
+  ;(package! spray
+  ;  :recipe (:host github
+  ;           :repo "emacsmirror/spray"
+  ;           :branch "master"))
+  ;(package! bbdb-android
+  ;  :recipe (:host github
+  ;           :repo "emacsattic/bbdb-android"
+  ;           :branch "master"))
+  ;(package! emacs-reveal
+  ;  :recipe (:host gitlab
+  ;           :repo "oer/emacs-reveal"
+  ;           :branch "master"))
+  ;(package! org-kanban
+  ;  :recipe (:host github
+  ;           :repo "gizmomogwai/org-kanban"
+  ;           :branch "master"))
+  ;(package! kanban)
+  (package! dictionary)
+  (package! doom-snippets
+    :recipe (:host github
+             :repo "hlissner/doom-snippets"
+             :branch "master"))
+  (package! org-babel-eval-in-repl)
+  (package! ob-ipython) ;; Currently not working
+  ; https://www.gtrun.org/custom/config.html#org62f48c1
+;  (package! ein
+;    :recipe (:host github
+;             :repo "millejoh/emacs-ipython-notebook"
+;             :files ("lisp/*.el")
+;             :branch "master"))
+  (package! jupyter)
+  (package! org-mime)
+
+  (package! ob-sclang
+    :recipe (:host github
+             :repo "djiamnot/ob-sclang"
+             :files ("*.el")))
+
+  (package! sclang-mode
+    :recipe (:host github
+             :repo "supercollider/scel"
+             :files ("el/*.el")))
+
+  (package! org-caldav)
+  ;(package! ox-taskjuggler)
+
+
+  ;(package! foxdot-mode
+  ;  :recipe (:host github
+  ;           :repo "superguaricho/foxdot-mode"
+  ;           :files ("*.el")))
+  ;(package! tidal)
+
+  ;(package! org
+  ;  :recipe (:host github
+  ;           :repo "emacs-straight/org-mode"
+  ;           :pin "5890ac"))
+
+  ; not found
+  ;(package! org :pin "9082fa889")
+  ;(package! org :pin "8ef6205a560cd3a92f8c5f8fe34953b80121c2cb")
+
+  ; org 9.6.7
+  ; THIS WORKS on Emacs 28.2
+  ; This is a temporary hack on 2023-08-08 due to https://github.com/org-roam/org-roam/issues/2361
+  ;(package! org :pin "ca873f7")
+
+  ; org 9.5.5 - org-ql not working
+  ;(package! org :pin "8ef6205a560cd3a92f8c5f8fe34953b80121c2cb")
+
+  ; Latest org breaks org-ql
+  ;(package! org)
+
+  ;(package! org-plus-contrib :recipe (:host github :repo "emacs-straight/org-mode"))
+#+END_SRC
+
+** DONE Doom base :doom:
+:PROPERTIES:
+:ID:       d6a21ce6-e8e5-456d-9646-83b5393f8778
+:END:
+#+BEGIN_SRC emacs-lisp
+  ;(setq debug-on-error t)
+  (when (file-exists-p "~/.config/doom/.env")
+    (doom-load-envvars-file "~/.config/doom/.env"))
+  (setq user-full-name (or (getenv "EMACS_USER_FULL_NAME") "Anonymous User")
+        user-mail-address (or (getenv "EMACS_USER_EMAIL_ADDRESS") "anon@example.com"))
+
+  ;; Place your private configuration here! Remember, you do not need to run 'doom
+  ;; sync' after modifying this file!
+
+
+  ;; Some functionality uses this to identify you, e.g. GPG configuration, email
+  ;; clients, file templates and snippets.
+
+  ;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
+  ;; are the three important ones:
+  ;;
+  ;; + `doom-font'
+  ;; + `doom-variable-pitch-font'
+  ;; + `doom-big-font' -- used for `doom-big-font-mode'; use this for
+  ;;   presentations or streaming.
+  ;;
+  ;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
+  ;; font string. You generally only need these two:
+  ;; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
+  ;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
+
+  ;; There are two ways to load a theme. Both assume the theme is installed and
+  ;; available. You can either set `doom-theme' or manually load a theme with the
+  ;; `load-theme' function. This is the default:
+  (setq doom-theme 'doom-molokai)
+  ;;(setq doom-theme 'doom-one)
+  ;;(setq doom-theme 'doom-gruvbox)
+
+  ;; If you use `org' and don't want your org files in the default location below,
+  ;; change `org-directory'. It must be set before org loads!
+  (setq org-directory (or (getenv "EMACS_ORG_DIRECTORY") "~/org"))
+
+  ;; This determines the style of line numbers in effect. If set to `nil', line
+  ;; numbers are disabled. For relative line numbers, set this to `relative'.
+  (setq display-line-numbers-type t)
+
+
+  ;; Here are some additional functions/macros that could help you configure Doom:
+  ;;
+  ;; - `load!' for loading external *.el files relative to this one
+  ;; - `use-package!' for configuring packages
+  ;; - `after!' for running code after a package has loaded
+  ;; - `add-load-path!' for adding directories to the `load-path', relative to
+  ;;   this file. Emacs searches the `load-path' when you load packages with
+  ;;   `require' or `use-package'.
+  ;; - `map!' for binding new keys
+  ;;
+  ;; To get information about any of these functions/macros, move the cursor over
+  ;; the highlighted symbol at press 'K' (non-evil users must press 'C-c c k').
+  ;; This will open documentation for it, including demos of how they are used.
+  ;;
+  ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
+  ;; they are implemented.
+
+  ;; Change banner splash image
+  ; (setq fancy-splash-image "~/Pictures/banners/Hebrew-Names03-YHWH_yireh-YHWH_will_provide.png")
+
+  ;; No confirm on exit
+  (setq confirm-kill-emacs nil)
+
+  (setq doom-unicode-font (font-spec :family "Cardo"))
+  ;(setq doom-variable-pitch-font (font-spec :family "Ezra"))
+  ;(setq doom-font (font-spec :family "JetBrains Mono" :size 24)
+  ;      doom-big-font (font-spec :family "JetBrains Mono" :size 36)
+  ;      doom-variable-pitch-font (font-spec :family "Overpass" :size 24)
+  ;      doom-unicode-font (font-spec :family "JuliaMono")
+  ;      doom-serif-font (font-spec :family "IBM Plex Mono" :weight 'light))
+
+  ; See: https://www.reddit.com/r/DoomEmacs/comments/llow52/rtl_languages/
+  (setq-default bidi-display-reordering 't
+                bidi-paragraph-direction 'nil)
+#+END_SRC
+
+*** Use
+| =SPC h v=                  | Describes a variable |
+| =SPC o t= / =vterm/toggle= |                      |
+| =SPC o T= / =vterm/here=   |                      |
+*** How to =reload= the config?                                      :doom:
+- =C-c C-v t= to tangle this file or init.el / =org-babel-tangle=
+- =C-h r r= / =doom/reload=
+- doom/upgrade
+** DONE =org-mode= / Org :org_mode:
+:PROPERTIES:
+:ID:       fb70e08d-ed68-47be-b9d6-aecf53b5e027
+:END:
+#+BEGIN_SRC emacs-lisp
+(after! org
+  ;; Appearance
+  (setq org-ellipsis " ▼ "
+        org-tags-column -77)
+
+  ;; Source block indentation
+  (setq org-src-fontify-natively t
+        org-src-window-setup 'current-window
+        org-src-strip-leading-and-trailing-blank-lines t
+        org-src-preserve-indentation t
+        org-src-tab-acts-natively t)
+
+  (setq my-org-directory (or (getenv "EMACS_MY_ORG_DIRECTORY") "~/org")
+      my-org-roam-directory (or (getenv "EMACS_MY_ORG_ROAM_DIRECTORY") "~/org/roam")
+      my-org-journal-directory (or (getenv "EMACS_MY_ORG_JOURNAL_DIRECTORY") "~/org/journal")
+      org-default-capture-file (or (getenv "EMACS_ORG_DEFAULT_CAPTURE_FILE") "~/org/capture.org")
+      my-org-notes (or (getenv "EMACS_MY_ORG_NOTES") "~/org/notes"))
+
+  ;; Modules
+  (setq org-modules
+        '(org-habit org-protocol org-w3m))
+
+  ;; Logging
+  (setq org-log-into-drawer "LOGBOOK"
+        org-log-reschedule 'note)
+
+  ;; Inheritance
+  (setq org-use-property-inheritance
+        '("project" "agenda-group"))
+
+  ;; Misc
+  (setq org-insert-heading-respect-content t
+        org-latex-inputenc-alist '(("" . ("utf8" . "utf8x")))
+        org-confirm-babel-evaluate nil)
+
+  ;; File association
+  (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
+
+  ;; Org ID logic
+  (require 'uuidgen)
+  (setq org-id-link-to-org-use-id
+        'create-if-interactive-and-no-custom-id
+        org-id-locations-file (concat my-org-directory ".org-id-locations"))
+
+  ;; Disable hl-todo-mode in org
+  (add-hook 'org-mode-hook (lambda () (hl-todo-mode -1)))
+
+  ;; Accept local variable in .dir-locals.el
+  (put 'org-todo-keyword-faces 'safe-local-variable #'listp)
+
+  ;; Hotkey override
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (local-set-key (kbd "C-c C-/") #'my-org-open-at-point)))
+
+  ;; Auto-generate IDs if `#+OPTIONS: auto-id:t` is in file
+  (defun vonpupp/org-custom-id-get (&optional pom create prefix)
+    (interactive)
+    (org-with-point-at pom
+      (let ((id (org-entry-get nil "ID")))
+        (cond
+         ((and id (stringp id) (string-match "\\S-" id)) id)
+         (create
+          (setq id (org-id-new))
+          (org-entry-put pom "ID" id)
+          (org-id-add-location id (buffer-file-name (buffer-base-buffer)))
+          id)))))
+
+  (defun vonpupp/org-add-ids-to-headlines-in-file ()
+    (interactive)
+    (save-excursion
+      (widen)
+      (goto-char (point-min))
+      (when (re-search-forward "^#\\+OPTIONS:.*auto-id:t" (point-max) t)
+        (org-map-entries
+         (lambda () (vonpupp/org-custom-id-get (point) 'create))))))
+
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook
+                        (lambda ()
+                          (when (and (eq major-mode 'org-mode)
+                                     (not buffer-read-only))
+                            (vonpupp/org-add-ids-to-headlines-in-file)))
+                        nil 'local)))
+)
+
+(after! ox
+  (require 'ox-extra)
+  (ox-extras-activate '(ignore-headlines)))
+
+#+END_SRC
+
+#+RESULTS:
+
+** DONE =browse-url-browser-function=                                 :core:
+:PROPERTIES:
+:ID:       c80d5723-9fc6-464a-a8af-d0e32758f4ed
+:END:
+This snippets will open links on youtube with mpv and any file ending in pdf
+with zathura. This is still work in progress.
+
+I have moved away from =start-process= to =call-process= because the process is
+not anchored to emacs, so I can still close emacs and continue the process if
+needed. This probably need tweaks on MS Windows, but since I don't use it, I
+just don't care. Read more [[https://emacs.stackexchange.com/questions/22363/possible-to-detach-a-child-process/65040#65040][here]].
+#+BEGIN_SRC emacs-lisp
+(defun mpv-play-url (url &rest args)
+  ""
+  (interactive)
+  (call-process "mpv" nil 0 nil "--player-operation-mode=pseudo-gui" url))
+
+;(defun firefox-browse-url (url &rest args)
+;  ""
+;  (interactive)
+;  (call-process "firefox" nil 0 nil url))
+;
+;(defun ice-firefox-browse-url (url &rest args)
+;  ""
+;  (interactive)
+;  (call-process "ice-firefox.sh" nil 0 nil url))
+
+(defun ice-trading-browse-url (url &rest args)
+  ""
+  (interactive)
+  (call-process "ice-trading.sh" nil 0 nil url))
+
+(defun chromium-browse-url (url &rest args)
+  ""
+  (interactive)
+  (call-process "chromium" nil 0 nil url))
+
+(defun zathura-open-url (url &rest args)
+  ""
+  (interactive)
+  (call-process "zathura" nil 0 nil url))
+
+;(setq browse-url-browser-function
+;  (quote (
+;    ("tradingview\\.?com" . ice-trading-browse-url)
+;    ("youtu\\.?be" . mpv-play-url)
+;    ("youtube\\.?com" . mpv-play-url)
+;    ("audio\\.esv\\.?org" . mpv-play-url)
+;    (".\\.pdf" . zathura-open-url))))
+;    ;("." . chromium-browse-url))))
+;    ;("." . eww-browse-url))))
+;
+;; https://emacs.stackexchange.com/questions/11008/can-org-mode-open-a-link-in-external-browser-when-using-prefix-key
+;(defun my-org-open-at-point (&optional arg)
+;  (interactive "P")
+;  (if (not arg)
+;      (org-open-at-point)
+;      (let ((browse-url-browser-function #'chromium-browse-url))
+;        (org-open-at-point))))
+
+(defun browse-url-firefox (url &optional _new-window)
+  "Open URL with Firefox."
+  (start-process "firefox" nil "firefox" url))
+
+(after! org
+  (setq browse-url-handlers
+        '(
+          ("tradingview\\.?com" . ice-trading-browse-url)
+          ("youtu\\.?be" . mpv-play-url)
+          ("youtube\\.?com" . mpv-play-url)
+          ("audio\\.esv\\.?org" . mpv-play-url)
+          ("http" . browse-url-firefox)
+          ("https" . browse-url-firefox)
+          (".\\.pdf" . zathura-open-url)
+          ;("." . chromium-browse-url)
+          ;("." . eww-browse-url)
+          ("ftp" . browse-url-firefox)))
+        )
+#+END_SRC
+
+** DONE =calendar=                                                    :core:
+:PROPERTIES:
+:ID:       853bd064-e63a-43a6-bb25-50c6bb9c9598
+:END:
+#+BEGIN_SRC emacs-lisp
+(setq calendar-week-start-day 1)
+
+(copy-face font-lock-constant-face 'calendar-iso-week-face)
+(set-face-attribute 'calendar-iso-week-face nil
+                    :height 0.7)
+(setq calendar-intermonth-text
+      '(propertize
+        (format "W%02d"
+                (car
+                 (calendar-iso-from-absolute
+                  (calendar-absolute-from-gregorian (list month day year)))))
+        'font-lock-face 'calendar-iso-week-face))
+
+(copy-face 'default 'calendar-iso-week-header-face)
+(set-face-attribute 'calendar-iso-week-header-face nil
+                    :height 0.7)
+(setq calendar-intermonth-header
+      (propertize "W"                  ; or e.g. "KW" in Germany
+                  'font-lock-face 'calendar-iso-week-header-face))
+
+(set-face-attribute 'calendar-iso-week-face nil
+                      :height 1.0 :foreground "salmon")
+#+END_SRC
+** KILL =flyspell=                                                    :core:
+:PROPERTIES:
+:ID:       ccc34479-9d7e-408a-bff7-320349c0ea97
+:END:
+#+BEGIN_SRC emacs-lisp
+  (after! (org)
+    ;;(spell-fu-mode -1)
+    )
+#+END_SRC
+
+See: [[id:084619b0-7660-4c82-8a63-9be72683701c][How to spell an document in Emacs]]
+- Disable spell-fu =spell-fu=
+- Select the language with =ispell-change-dictionary=
+- Check the buffer =flyspell-buffer=
+** =org-babel-tangle-append=                                          :core:
+:PROPERTIES:
+:ID:       3b5765ab-0607-4168-91af-7e49cfb4103b
+:END:
+#+BEGIN_SRC emacs-lisp
+(defun org-babel-tangle-append ()
+  "Append source code block at point to its tangle file.
+The command works like `org-babel-tangle' with prefix arg
+but `delete-file' is ignored."
+  (interactive)
+  (cl-letf (((symbol-function 'delete-file) #'ignore))
+    (org-babel-tangle '(4))))
+#+END_SRC
+** =safe-local-variables=                                             :core:
+:PROPERTIES:
+:ID:       a0840132-8566-46b6-a83e-8a4848eb67ec
+:END:
+#+BEGIN_SRC emacs-lisp
+  ;(put '(eval flyspell-buffer) 'safe-local-variable #'listp)
+  (add-to-list 'safe-local-variable-values
+               '(eval flyspell-buffer))
+#+END_SRC
+
+** IDEA =capture= [not working]                                       :core:
+:PROPERTIES:
+:ID:       841c3e2e-5b0d-4a48-9e27-c81eef99487e
+:END:
+See: https://zzamboni.org/post/how-to-insert-screenshots-in-org-documents-on-macos/
+See: https://yiufung.net/post/anki-org/
+#+BEGIN_SRC emacs-lisp
+(defun make-orgcapture-frame ()
+    "Create a new frame and run org-capture."
+    (interactive)
+    (make-frame '((name . "org-capture") (window-system . x)))
+    (select-frame-by-name "org-capture")
+    (counsel-org-capture)
+    (delete-other-windows)
+    )
+#+END_SRC
+** KILL =spacemacs= module                                   :core:noexport:
+:PROPERTIES:
+:ID:       ea608bb2-2e24-45fe-aca4-47d363009abd
+:END:
+#+BEGIN_SRC sh :tangle no
+git clone git@github.com:chenyanming/spacemacs_module_for_doom.git ~/.doom.d/modules/spacemacs
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC emacs-lisp
+  ;(load! "~/.doom.d/modules/spacemacs/config")
+#+END_SRC
+
+** DONE =org-protocol=                                            :org_mode:
+:PROPERTIES:
+:ID:       f70c3c39-6493-441d-95a6-0653c6b38947
+:END:
+#+BEGIN_SRC emacs-lisp
+  ;; org all setting start here
+  ;; start org-protocol
+  (require 'org-protocol)
+
+  ;; with eval after load org
+  (with-eval-after-load 'org
+    ;; org-protocol
+    (add-to-list 'org-modules 'org-protocol))
+#+END_SRC
+
+- [[id:5f48cafd-14d1-40e0-ae00-77b35d8542ef][Capturing using templates]]
+- I have set up some mappings on tridactyl to ease the process of capturing:
+  - =,l= for capturing links
+  - =,s= for capturing selected text
+  - =,r= for capturing using org-roam
+
+Or, use the following extensions:
+- Chrome: [[https://chrome.google.com/webstore/detail/org-capture/kkkjlfejijcjgjllecmnejhogpbcigdc]]
+- Firefox: [[https://addons.mozilla.org/en-US/firefox/addon/org-capture/]]
+
+Once installed an icon on the top of the browser should appear. To setup the
+handler and the templates read: [[https://github.com/sprig/org-capture-extension]]
+
+The '(server-start)' is needed. So start emacs using =em=
+
+** DONE =org-capture=                                             :org_mode:
+:PROPERTIES:
+:ID:       00d2b45a-0bff-4dd3-af97-98640e9b10e4
+:END:
+#+BEGIN_SRC emacs-lisp
+  ;; Doc: https://github.com/sprig/org-capture-extension
+  ;; (defun transform-square-brackets-to-round-ones(string-to-transform)
+  ;;   "Transforms [ into ( and ] into ), other chars left unchanged."
+  ;;   (concat
+  ;;    (mapcar #'(lambda (c) (if (equal c ?[) ?\( (if (equal c ?]) ?\) c))) string-to-transform))
+  ;;   )
+
+  ;; CAPTURE
+  (after! org
+  (setq org-capture-templates
+    '(
+      ;; Doc: https://github.com/sprig/org-capture-extension
+      ;; Doc: https://gist.github.com/cjp/64ac13f5966456841c197f70c7d3a53a
+      ("p" "Protocol" entry (file+headline "~/org/capture.org" "Inbox")
+        "* [[%:link][%:description]]\n- Source: %:link\n- Title: %:description\n#+BEGIN_QUOTE\n%i\n#+END_QUOTE\n")
+      ("L" "Browser link" entry (file+headline "~/org/capture.org" "Inbox")
+        "* [[%:link][%:description]]\n- Source: %:link\n- Title: %:description\n- Captured on: %u\n")
+
+      ;; Templates for the TASKS keyword sequence
+      ("t" "Tasks")
+
+      ;; TEMPLATE A
+      ("th" "SMART Habit" entry (file org-default-capture-file)
+       "* REPEAT %^{Describe the task}       :HABIT:
+  %?
+  SCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d>>\")
+  :STYLE:    habit
+  :SMART:
+  :Specific:   %^{What is the purpose of this goal}
+  :Measurable: %^{How can you measure it}
+  :Activity:   %^{What activity do we need to do}
+  :Resources:  %^{What resources do we need}
+  :Timebox:    %^{What time do we need to spend on that}
+  :Reviewed:
+  :LOGBOOK:
+  - Recorded: %U
+  :HoursWeek:  Get it automatically
+  :END:" :empty-lines 1)
+  )))
+#+END_SRC
+
+#+RESULTS:
+| p | Protocol | entry | (file+headline ~/org/capture.org Inbox) | * [[%:link][%:description]] |
+
+Use the following extensions:
+- Chrome: [[https://chrome.google.com/webstore/detail/org-capture/kkkjlfejijcjgjllecmnejhogpbcigdc]]
+- Firefox: [[https://addons.mozilla.org/en-US/firefox/addon/org-capture/]]
+
+Once installed an icon on the top of the browser should appear. To setup the
+handler and the templates read: [[https://github.com/sprig/org-capture-extension]]
+
+*** DONE Integrate capturing with tridactyl
+- [[id:5f48cafd-14d1-40e0-ae00-77b35d8542ef][Capturing using templates]]
+- I have set up some mappings on tridactyl to ease the process of capturing:
+  - =,l= for capturing links
+  - =,s= for capturing selected text
+  - =,r= for capturing using krg-roam
+
+** DONE =org-babel=                                               :org_mode:
+:PROPERTIES:
+:ID:       ad583289-41f7-4c40-b8d5-f290072ee489
+:END:
+#+BEGIN_SRC emacs-lisp
+(after! 'org
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+    '((emacs-lisp . t)
+    (python . t)
+    (jupyter . t)
+    (ein . t)
+    (ipython . t)
+    (sclang . t)
+    (ditaa . t)
+    (lilypond t)
+    )))
+#+END_SRC
+
+#+RESULTS:
+
+** DONE =org-reverse-datetree=                               :org_mode:apps:
+:PROPERTIES:
+:ID:       1da0cb63-9509-4391-a6c5-7bf43897b036
+:END:
+#+BEGIN_SRC emacs-lisp
+         (org-ql-block '(level 2))
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC emacs-lisp
+         (org-ql-block '(level 3))
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC emacs-lisp
+         (org-ql-block '(level 4))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(setq org-agenda-custom-commands
+      '(("r" "Y2024 Reverse daily tasks"
+         ;org-ql-block '(and (level 4) (todo)
+         ;                  (< (- (float-time (org-reverse-datetree-guess-date))
+         ;                        (float-time))
+         ;                     (* 3600 24 14))
+         ;))))
+         ;(
+          (org-super-agenda-groups
+           '((:todo "DONE")
+             (:todo t)))
+          (org-agenda-files '("~/org/exobrain/20231120231619-daily_tasks_log_y2024.org")
+                            (org-agenda nil "a")
+                            ))))
+#+END_SRC
+** DONE =org-download=                                       :org_mode:apps:
+:PROPERTIES:
+:ID:       8ff74560-fb0d-4e4f-9234-b27a80bab776
+:END:
+Clipboard usage
+- Use flameshot as usual and save the image to the clipboard
+- Use M-x org-download-clipboard and the image should be pasted
+
+Drag and drop usage
+- Use the file explorer and drag the desired image
+- If drag and dropping from firefox, the image will get a .nil extension (FIXME) (NOTE: doesn't seem to work on Chromium)
+
+Related configs:
+- https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el#L462
+- https://github.com/poligen/dotfiles/blob/25785810f9bf98f6eec93e400c686a4ad65ac310/doom.d/config.el#L118
+- https://ridaayed.github.io/posts/screenshots-emacs-org-mode-flameshot/
+- https://dotdoom.rgoswami.me/config.html
+
+#+BEGIN_SRC emacs-lisp
+(setq org-startup-with-inline-images 'nil)
+(setq org-image-actual-width 500)
+(use-package! org-download
+  :after org
+  :commands
+  org-download-dnd
+  org-download-yank
+  org-download-screenshot
+  org-download-dnd-base64
+  :init
+  (map! :map org-mode-map
+        "s-<print>" #'org-download-screenshot
+        "s-y" #'org-download-yank)
+  (pushnew! dnd-protocol-alist
+            '("^\\(?:https?\\|ftp\\|file\\|nfs\\):" . org-download-dnd)
+            '("^data:" . org-download-dnd-base64))
+  (advice-add #'org-download-enable :override #'ignore)
+
+  (after! org
+    ;; A shorter link to attachments
+    (+org-define-basic-link "download" (lambda () (or org-download-image-dir org-attach-id-dir "."))
+      :image-data-fun #'+org-image-file-data-fn
+      :requires 'org-download)
+    (org-add-link-type "xdg" (lambda (path) (browse-url-xdg-open path))))
+  :config
+  (defun +org/org-download-method (link)
+    (let* ((filename
+            (file-name-nondirectory
+             (car (url-path-and-query
+                   (url-generic-parse-url link)))))
+           ;; Create folder name with current buffer name, and place in root dir
+           (dirname (concat "~/org-media/"
+                            (replace-regexp-in-string " " "_"
+                                                      (downcase (file-name-base buffer-file-name))))))
+           ;(dirname (concat "./images/"
+           ;                 (replace-regexp-in-string " " "_"
+           ;                                           (downcase (file-name-base buffer-file-name))))))
+      (make-directory dirname t)
+      (expand-file-name filename dirname)))
+  (setq org-download-screenshot-method
+        (cond (IS-MAC "screencapture -i %s")
+              (IS-LINUX
+               ;(cond ((executable-find "maim")  "maim -u -s %s")
+               (cond ;((executable-find "flameshot")  "flameshot gui --raw > %s")
+                     ((executable-find "scrot") "scrot -s %s")))))
+  (setq org-download-method '+org/org-download-method)
+  ;(global-set-key [S-"<print>"] 'org-download-screenshot)
+  ;; Use #+ATTR_ORG: :width 300px to customized image display width
+  (setq org-image-actual-width nil)
+  ;; display inline
+  (setq org-display-inline-images t)
+  (setq org-redisplay-inline-images t)
+  (setq org-startup-with-inline-images "inlineimages")
+  )
+;(use-package! org-download
+;  :after org
+;  :config
+;  ;; Add handlers for drag-and-drop when Org is loaded.
+;  (org-download-enable)
+;  (setq-default   org-download-method 'directory
+;                  org-download-heading-lvl nil
+;                  org-download-delete-image-after-download t
+;                  org-download-screenshot-method "echo"
+;                  ;; org-download-image-dir "~/org"
+;                  org-download-screenshot-file "/tmp/screenshot.png"
+;                  org-download-image-org-width 800
+;                  org-download-annotate-function '(lambda (_link) ""))
+;  ;; This section has been taken from https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el#L477
+;  (defun +org/org-download-method (link)
+;    (let* ((filename
+;            (file-name-nondirectory
+;             (car (url-path-and-query
+;                   (url-generic-parse-url link)))))
+;           ;; Create folder name with current buffer name, and place in root dir
+;           (dirname (concat "./images/"
+;                            (replace-regexp-in-string " " "_"
+;                                                      (downcase (file-name-base buffer-file-name)))))
+;           (filename-with-timestamp (format "%s%s.%s"
+;                                            (format-time-string org-download-timestamp)
+;                                            (file-name-sans-extension filename)
+;                                            (file-name-extension filename)))
+;      (make-directory dirname t)
+;      (expand-file-name filename-with-timestamp dirname))))
+;  :config
+;  (setq org-download-screenshot-method
+;        (cond (IS-MAC "screencapture -i %s")
+;              (IS-LINUX
+;               (cond ((executable-find "flameshot")  "flameshot gui --raw > %s")
+;                     ((executable-find "scrot") "scrot -s %s")))))
+;  (setq org-download-method '+org/org-download-method))
+#+END_SRC
+
+#+RESULTS:
+
+*** How to use
+- Just drag and drop the image to the file
+- A new =images/<holder-root-file (org file)>= folder will be created
+
+*** DONE Check if =org-download-image-dir= is honored when it exists on the file
+
+** DONE =org-roam= / Roam                                    :org_mode:apps:
+:PROPERTIES:
+:ID:       d5da2abf-9d22-4a34-95cc-f32b6aae9db5
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! org-roam
+  ;:after (org emacsql-sqlite-builtin)
+  ;:commands (org-roam-node-insert org-roam-node-find org-roam-switch-to-buffer org-roam)
+  ;:hook
+  ;(after-init . org-roam-setup)
+  :after (org emacsql-sqlite-builtin)
+  :hook (after-init . org-roam-setup)
+  :init
+  (setq org-roam-directory
+      (file-truename
+       (or (getenv "EMACS_ORG_ROAM_DIRECTORY")
+           "~/org/exobrain/"))
+      org-roam-database-connector 'sqlite-builtin
+      org-roam-db-gc-threshold most-positive-fixnum
+      org-id-link-to-org-use-id t
+      org-roam-graphviz-executable "/usr/bin/dot"
+      org-roam-dailies-directory "journal/"
+      org-roam-graph-exclude-matcher "private"
+      org-roam-tag-sources '(prop last-directory))
+
+  (map! :leader
+        :prefix "r"
+        :desc "org-roam-buffer-toggle" "l" #'org-roam-buffer-toggle
+        :desc "org-roam-insert" "i" #'org-roam-insert
+        :desc "org-roam-switch-to-buffer" "b" #'org-roam-switch-to-buffer
+        :desc "org-roam-node-find" "f" #'org-roam-node-find
+        :desc "org-roam-graph-show" "g" #'org-roam-graph
+        ;:desc "org-roam-node-insert" "i" #'org-roam-node-insert
+        :desc "org-roam-capture" "c" #'org-roam-capture
+        :desc "org-roam-dailies-capture-today" "j" #'org-roam-dailies-capture-today
+        :desc "deft" "s" #'deft)
+  ;(setq org-roam-v2-ack t)
+  :config
+  (org-roam-setup)
+  (org-roam-db-autosync-mode +1))
+
+;(use-package! org-roam
+;  :defer t
+;  :config
+;    (setq
+;        org-roam-db-location (file-truename "~/org/org-roam.db")
+;        org-attach-id-dir "assets/"
+;    (org-roam-db-autosync-enable)))
+
+(use-package! websocket
+    :after org-roam)
+
+(use-package! org-roam-ui
+    :after org-roam
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
+
+(after! (org-roam)
+  (winner-mode +1)
+  (map! :map winner-mode-map
+        "<M-right>" #'winner-redo
+        "<M-left>" #'winner-undo))
+
+;(map! :map evil-org-mode-map
+;      :leader
+;      (:prefix ("r")
+;       :desc "Insert node"
+;       "i" #'org-roam-node-insert
+;       :desc "Find node"
+;       "f" #'org-roam-node-find
+;       :desc "Journal today"
+;       "j" #'org-roam-dailies-capture-today
+;       :desc "Capture to node"
+;       "c" #'org-roam-capture
+;       :desc "Toggle roam buffer"
+;       "b" #'org-roam-buffer-toggle
+;       :desc "Open random note"
+;       "r" #'org-roam-node-random
+;       :desc "Visit node"
+;       "v" #'org-roam-node-visit
+;       :desc "Visit node"
+;       "s" #'deft
+;       :desc "Open ORUI"
+;       "u" #'org-roam-ui-open))
+
+
+;  (set-company-backend! 'org-mode '(company-capf)))
+#+END_SRC
+
+#+RESULTS:
+
+** DONE =org-noter=                                 :noexport:org_mode:apps:
+#+BEGIN_SRC emacs-lisp
+  (use-package! org-noter
+    :after (:any org pdf-view)
+    :config
+    (setq
+     ;; The WM can handle splits
+     org-noter-notes-window-location 'other-frame
+     ;; Please stop opening frames
+     org-noter-always-create-frame nil
+     ;; I want to see the whole file
+     org-noter-hide-other nil
+     ;; Everything is relative to the rclone mega
+     org-noter-notes-search-path (list my-org-notes)
+     )
+  )
+    ;; Open notes on a separate frame
+    ;(setq org-noter-notes-window-location (quote (quote other-frame)))
+    ;; This should allow to continue on last page but it is not working.
+    ;; Needs review
+    ;(setq org-noter-auto-save-last-location t)
+#+END_SRC
+** DONE =org-ql=                                             :org_mode:apps:
+:PROPERTIES:
+:ID:       e72a9ca6-bc11-4ddc-8ddf-f4c47e764f76
+:END:
+#+BEGIN_SRC emacs-lisp
+  (use-package! org-ql
+    :after org
+    ;;(require 'org-ql)
+  )
+#+END_SRC
+** DONE =org-reverse-datetree=                               :org_mode:apps:
+:PROPERTIES:
+:ID:       e83b6a49-80c3-4dc3-8225-2535562e42d9
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! org-reverse-datetree
+  :after org
+  )
+#+END_SRC
+
+- Add the following header section:
+  #+BEGIN_EXAMPLE
+    #+REVERSE_DATETREE_DATE_FORMAT: %Y-%m-%d %a
+    #+REVERSE_DATETREE_WEEK_FORMAT: %Y-W%W
+    #+REVERSE_DATETREE_YEAR_FORMAT: %Y
+    #+REVERSE_DATETREE_USE_WEEK_TREE: t
+  #+END_EXAMPLE
+- Use =org-reverse-datetree-goto-date-in-file=
+- Pick the date
+- Read: [[id:b35d9436-20bc-4c95-9666-adc6eaa31506][How to use org-reverse-datetree]]
+
+** KILL =org-kanban=                                :org_mode:apps:noexport:
+:PROPERTIES:
+:ID:       c76cec00-2b82-46e4-9390-72e2c4af6823
+:END:
+#+BEGIN_SRC emacs-lisp
+;(use-package! org-kanban
+;  :after org
+;  )
+#+END_SRC
+
+| Key     | Mode               | Description            |
+|---------+--------------------+------------------------|
+| =S-RET= | Elfeed-search-mode | Open link into browser |
+| =RET=   | Elfeed-search-mode | Open item              |
+| =s=     | Elfeed-search-mode | Filter                 |
+
+Time filtering
+** =oer-reveal/citeproc=                                     :org_mode:apps:
+:PROPERTIES:
+:ID:       bab04bab-d9d4-4f77-b305-e70f8d3a72fc
+:END:
+- =org-re-reveal-export-to-html=
+#+BEGIN_SRC emacs-lisp
+(use-package! oer-reveal
+  :after org
+    (require 'oer-reveal-publish)
+  :config
+    (setq
+     oer-reveal-setup-submodules t
+     oer-reveal-generate-include-files t
+     oer-reveal-publish-setq-defaults)
+  )
+
+(use-package! citeproc
+  :after oer-reveal
+  )
+
+(use-package! org-re-reveal-citeproc
+  :after citeproc
+    (require 'org-re-reveal-citeproc)
+  :config
+    (add-to-list 'org-export-filter-paragraph-functions
+                 #'org-re-reveal-citeproc-filter-cite)
+  )
+#+END_SRC
+** DONE =anki-editor= / Anki                                 :apps:learning:
+:PROPERTIES:
+:ID:       c8d90b8f-b518-474c-8714-5e2b221388a4
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! anki-editor
+  :after org
+  :config
+    (setq anki-editor-create-decks t
+          anki-editor-org-tags-as-anki-tags t))
+
+
+(map! :localleader
+      :map org-mode-map
+      (:prefix ("a" . "Anki")
+        :desc "Push" "p" 'anki-editor-push-notes
+        :desc "Retry" "r" 'anki-editor-retry-failure-notes
+        :desc "Insert" "n" 'anki-editor-insert-note
+        (:prefix ("c" . "Cloze")
+          :desc "Dwim" "d" 'anki-editor-cloze-dwim
+          :desc "Region" "r" 'anki-editor-cloze-region
+          )
+        )
+ )
+#+END_SRC
+
+For further instructions read [[id:09a66f47-2588-4dd0-b836-0d5e31fd6bcc][How to create an anki deck using org-mode]]
+- Open Anki
+- =anki-editor-mode=
+- =anki-editor-push-notes=
+
+** TODO =bbdb-android=                                       :apps:contacts:
+:PROPERTIES:
+:ID:       d04180a1-59d3-41e9-920d-cc390cb00b6d
+:END:
+#+BEGIN_SRC emacs-lisp
+;(use-package! bbdb-android
+;  )
+#+END_SRC
+
+Read: https://github.com/emacsattic/bbdb-android
+Read: [[id:9e78ced3-8e90-4960-be55-72ca3fc97666][How to use bbdb-android?]]
+
+** DONE =beancount-mode=                                   :apps:accounting:
+:PROPERTIES:
+:ID:       b14a4bc8-0abe-43a1-87e0-0daed580e21c
+:END:
+#+BEGIN_SRC emacs-lisp
+  (use-package! beancount
+    :mode ("\\.beancount\\'" . beancount-mode)
+    :config
+    (setq beancount-electric-currency t)
+    (defun beancount-bal ()
+      "Run bean-report bal."
+      (interactive)
+      (let ((compilation-read-command nil))
+        (beancount--run "bean-report"
+                        (file-relative-name buffer-file-name) "bal")))
+    (map! :map beancount-mode-map
+          ;:n "TAB" #'beancount-align-to-previous-number
+          :i "RET" (cmd! (newline-and-indent) (beancount-align-to-previous-number))))
+#+END_SRC
+
+Doc: https://github.com/syl20bnr/spacemacs/issues/5258
+
+**** DONE Use =M-x outline-minor-mode= to fold sections
+:PROPERTIES:
+:ID:       52f925f3-46fc-4cd3-b085-e17d189d3d8b
+:END:
+#+BEGIN_SRC emacs-lisp
+  (use-package! outshine
+    :init (defvar outline-minor-mode-prefix "\M-#")
+    :commands outshine-mode
+    :config
+     (map! :map outline-minor-mode-map
+           :nm [tab] #'beancount-outline-cycle
+           :nm [backtab] #'outshine-cycle-buffer)
+    :hook
+    (
+     (nix-mode . outshine-mode)
+     (after-init . outline-minor-mode)))
+     ;(outline-minor-mode . outshine-mode)
+     ;(beancount-mode . outshine-mode)
+  ; Source: https://www.reddit.com/r/emacs/comments/aay01i/announce_outshine_30_has_been_released/
+;  (require 'outshine)
+;  (add-hook 'beancount-mode-hook 'outshine-mode)
+#+END_SRC
+** =circe= / IRC                                        :apps:communication:
+:PROPERTIES:
+:ID:       a89e7b18-6eb4-4fe7-b4f6-e6959ec88ccf
+:END:
+#+BEGIN_SRC emacs-lisp
+(after! circe
+;  (set-irc-server! "irc.libera.chat"
+;    `(:tls t
+;      :port 6697
+;      :nick "vonpupp"
+;      :sasl-username ,(+pass-get-user "accounts/libera.chat")
+;      :sasl-password (lambda (&rest _) (+pass-get-secret "accounts/libera.chat"))
+;      :channels ("#emacs")))
+  (set-irc-server! "irc.freenode.net"
+    `(:tls t
+      :port 6697
+      :nick "vonpupp"
+      :sasl-username ,(+pass-get-user "accounts/freenode.net")
+      :sasl-password (lambda (&rest _) (+pass-get-secret "accounts/freenode.net"))
+      :channels ("#emacs", "#org-mode")))
+)
+#+END_SRC
+
+- ==irc=
+| command                     | key       | description                                  |
+|-----------------------------+-----------+----------------------------------------------|
+| ~+irc/tracking-next-buffer~ | =SPC m a= | Switch to the next active buffer             |
+| ~circe-command-JOIN~        | =SPC m j= | Join a channel                               |
+| ~+irc/send-message~         | =SPC m m= | Send a private message                       |
+| ~circe-command-NAMES~       | =SPC m n= | List the names of the current channel        |
+| ~circe-command-PART~        | =SPC m p= | Part the current channel                     |
+| ~+irc/quit~                 | =SPC m Q= | Kill the current circe session and workgroup |
+| ~circe-reconnect~           | =SPC m R= | Reconnect the current server                 |
+|                             |           |                                              |
+** =deft=                                                             :apps:
+:PROPERTIES:
+:ID:       4e38501b-831d-4455-b8a2-8996ab8588db
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! deft
+  :after org
+  :bind
+  ("C-c n d" . deft)
+  :custom
+  (deft-recursive t)
+  (deft-use-filter-string-for-filename t)
+  (deft-default-extension "org")
+  (deft-directory org-roam-directory))
+#+END_SRC
+
+- =deft-find-file= to find files quickly
+
+** =dictionary.el= / dictd                                 :apps:scriptures:
+:PROPERTIES:
+:ID:       cfe052bb-9b93-4458-a3e1-3feb2aa87aae
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package! dictionary
+;  :if (file-exists-p "/etc/dict")
+;  :ensure t
+;:bind
+;  ("<f8>". dictionary-search)
+;  ("C-<f8>". dictionary-match-words)
+:config
+  (setq dictionary-server "localhost")
+)
+#+END_SRC
+
+- Use =dictionary-lookup-definition= to search word at cursor
+- See: [[id:877f0dcf-3451-4cda-8a32-fe457b4d2a90][How to use dictd with hebrew dictionaries]] on ow to create dictionaries
+- Example with word on 3 dictionaries: שלום
+- Example with my own custom dictionary: תַּתְּנַי
+- Example of same entry (without niqqud): תתני
+
+** =dtk= / Sword Project?                                  :apps:scriptures:
+:PROPERTIES:
+:ID:       0f5f69f0-2c57-49ef-8aa0-a4cd09552bb7
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! dtk
+  :bind (("C-c B" . dtk-bible))
+  :custom
+  (dtk-module "KJV")
+  (dtk-module-category "Biblical Texts")
+  (dtk-word-wrap t)
+  )
+#+END_SRC
+
+- =dtk-select-module=
+- =dtk-bible=
+
+** =elfeed=                                                   :apps:reading:
+:PROPERTIES:
+:ID:       c12daaf1-dd0b-416f-a6ee-5de508d3100a
+:END:
+#+BEGIN_SRC emacs-lisp
+(after! elfeed
+  (setq elfeed-search-filter "@1-month-ago +unread"))
+(add-hook! 'elfeed-search-mode-hook 'elfeed-update)
+#+END_SRC
+
+| Key     | Mode               | Description            |
+|---------+--------------------+------------------------|
+| =S-RET= | Elfeed-search-mode | Open link into browser |
+| =RET=   | Elfeed-search-mode | Open item              |
+| =s=     | Elfeed-search-mode | Filter                 |
+
+Time filtering
+  + ~@2-[days|weeks|years]-ago~: Past two days
+  + ~@2020-06-19~: To show specific day
+  + ~@2020-06-19--2020-03-10~: Span of time
+Tag filtering
+  + Include news and exclude rust: ~+news -rust~
+String filtering, this is case insensitive
+  + Include
+    + ~Linu[sx]~ Search for both ~Linus~ and ~Linux~
+  + Exclude ~!something~
+** KILL =el kanban=                             :apps:productivity:noexport:
+:PROPERTIES:
+:ID:       c3d2797c-0c22-4b6d-8407-dac98ec067c7
+:END:
+#+BEGIN_SRC emacs-lisp
+;(use-package! kanban
+;  :after org
+;  )
+#+END_SRC
+** =emacs-reveal= / Reveal                                    :apps:present:
+:PROPERTIES:
+:ID:       fab1941b-b852-4ac7-b58a-f1705ce20ef5
+:END:
+#+BEGIN_SRC emacs-lisp
+;(use-package! emacs-reveal
+;  :after org
+;  :config
+;    (add-to-list 'load-path "~/.emacs.d.doomemacs/.local/straight/repos/emacs-reveal")
+;    (require 'emacs-reveal)
+;  )
+#+END_SRC
+
+** =emmet-mode= / Web                                           :apps:devel:
+- Type =ul#nav>li.items$*4>item{}= on an html file and
+- =emmet-expand-line= (M-E)
+** =lsp-pyright= / Python                                       :apps:devel:
+:PROPERTIES:
+:ID:       5442d57e-2ab7-431d-a2f0-01b719faa381
+:END:
+Install dependencies
+sudo pacman -Syu cpython
+
+pip install --user pytest
+pip install --user nose
+pip install --user black
+pip install --user pyflakes
+pip install --user isort
+
+M-x lsp-doctor
+M-x python-mode
+
+#+BEGIN_SRC emacs-lisp
+(use-package! lsp-pyright
+  ;:ensure t
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp))))  ; or lsp-deferred
+#+END_SRC
+
+See: https://emacs-lsp.github.io/lsp-pyright/
+
+Read the [[https://docs.doomemacs.org/v21.12/modules/lang/python/][documentation]] of the lang/python layer with =h d m= and type =python=.
+
+This should work out of the box. Once Doom Emacs is up and running do the following:
+- =:e test.py=
+- type =def= TAB =say_hello= with content =print('hello')=
+- type =ifmain= TAB with content =say_hello()=
+- =C-c C-l= test.py
+
+See also: https://www.reddit.com/r/DoomEmacs/comments/ydvsks/python_with_doom_emacs/ity2ps3/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+
+** =lsp-tailwindcss= / Web / Tailwind CSS                   :apps:devel:web:
+:PROPERTIES:
+:ID:       a33a8abc-4a6b-4909-a381-6da7c6167816
+:END:
+#+BEGIN_SRC emacs-lisp
+;(use-package! lsp-tailwindcss)
+#+END_SRC
+** DONE =magit= / Git                                            :apps:core:
+:PROPERTIES:
+:ID:       f549cf03-28dd-4288-a9b2-7e7d9884bb74
+:END:
+#+BEGIN_SRC emacs-lisp
+  ;; Flyspell commit messages
+  (add-hook 'git-commit-setup-hook 'git-commit-turn-on-flyspell)
+#+END_SRC
+** =mu4e= / Email                                               :apps:email:
+:PROPERTIES:
+:ID:       60eca014-a41b-4370-bf1a-8b6225a00c0c
+:END:
+- [[id:eba561fd-613f-4cfa-95bc-d25095f551ba][How to use mu4e]]
+- =mu4e=
+- =mu4e-update-mail-and-index=
+- =notmuch=
+*** [[https://cheatography.com/ddoherty03/cheat-sheets/mu4e-with-gmail-hints/][mu4e (With GMail Hints) Keyboard Shortcuts by ddoherty03 - Download free from Cheatography - Cheatography.com: Cheat Sheets For Every Occasion]]
+:PROPERTIES:
+:ID:       852491d0-978a-44b5-b309-565df4440e12
+:END:
+- Source: https://cheatography.com/ddoherty03/cheat-sheets/mu4e-with-gmail-hints/
+- Title: mu4e (With GMail Hints) Keyboard Shortcuts by ddoherty03 - Download free from Cheatography - Cheatography.com: Cheat Sheets For Every Occasion
+- Captured on: [2022-01-17 Mon]
+
+
+#+BEGIN_SRC emacs-lisp
+(use-package! mu4e
+    :defer 20 ; Wait until 20 seconds after startup
+    :config
+    (setq
+        mu4e-mu-binary "/usr/bin/mu"
+        sendmail-program (executable-find "msmtp")
+        send-mail-function #'smtpmail-send-it
+        message-sendmail-f-is-evil t
+        message-sendmail-extra-arguments '("--read-envelope-from")
+        message-send-mail-function #'message-send-mail-with-sendmail)
+
+    (setq mu4e-contexts
+    `(
+      ;,(make-mu4e-context
+      ;  :name "ARCHIVE google apps"
+      ;  :enter-func (lambda () (mu4e-message "Entering mail@albertdelafuente.com context"))
+      ;  :leave-func (lambda () (mu4e-message "Leaving mail@albertdelafuente.com context"))
+      ;  :match-func
+      ;  (lambda (msg)
+      ;  (when msg
+      ;      (string=
+      ;      (mu4e-message-field msg :maildir)
+      ;      "/mail@albertdelafuente.com")))
+      ;  :vars '(
+      ;          (user-full-name     . "Albert De La Fuente")
+      ;          (user-mail-address  . "mail@albertdelafuente.com")
+      ;          (mu4e-sent-folder   . "/mail@albertdelafuente.com/sent")
+      ;          (mu4e-refile-folder . "/mail@albertdelafuente.com/archive")
+      ;          (mu4e-drafts-folder . "/mail@albertdelafuente.com/drafts")
+      ;          (mu4e-trash-folder  . "/mail@albertdelafuente.com/trash")
+      ;          (mu4e-sent-messages-behavior . sent)
+      ;          ))
+      ,(make-mu4e-context
+        :name "mail@albertdelafuente.com"
+        :enter-func (lambda () (mu4e-message "Entering b8478@mailfence.com context"))
+        :leave-func (lambda () (mu4e-message "Leaving b8478@mailfence.com context"))
+        :match-func
+        (lambda (msg)
+        (when msg
+            (string=
+            (mu4e-message-field msg :maildir)
+            "b8478@mailfence.com")))
+        :vars '(
+                (user-full-name     . "Albert De La Fuente")
+                (user-mail-address  . "mail@albertdelafuente.com")
+                (mu4e-sent-folder   . "/b8478@mailfence.com/sent")
+                (mu4e-refile-folder . "/b8478@mailfence.com/inbox")
+                (mu4e-drafts-folder . "/b8478@mailfence.com/drafts")
+                (mu4e-trash-folder  . "/b8478@mailfence.com/trash")
+                (mu4e-compose-signature . "Albert\nWebsite: albertdelafuente.com\nPGP Key: 5368 14BF 4871 A220")
+                ))
+      ))
+
+    (setq mu4e-context-policy 'ask-if-none
+          mu4e-compose-context-policy 'always-ask
+
+          ;; mbsync configs
+          mu4e-get-mail-command "mbsync inbox"
+          mu4e-update-interval 300
+
+          ;; send emails with format=flowed
+          mu4e-compose-format-flowed t
+
+          ;; no need to run cleanup after indexing for gmail
+          mu4e-index-cleanup nil
+          mu4e-index-lazy-check t
+
+          ;; Display options
+          mu4e-view-show-images t
+          mu4e-view-show-addresses 't
+
+          ;; avoid problems when moving mail
+          mu4e-change-filenames-when-moving t
+
+          ;; more sensible date format
+          mu4e-headers-date-format "%d.%m.%y")
+
+    ; (add-to-list 'mu4e-bookmarks '("m:/b8478@mailfence.com/inbox OR m:/admin@haevas.com/inbox OR m:/antonietta.vigliotti@gmail.com/inbox OR m:/mail@albertdelafuente.com/inbox" "Unified inbox" ?i))
+
+    ;; Shortcuts
+    (setq mu4e-maildir-shortcuts
+      '(
+        ("/b8478@mailfence.com/inbox"   . ?i)
+        ("/b8478@mailfence.com/sent"    . ?s)
+        ("/b8478@mailfence.com/trash"   . ?t)
+        ("/b8478@mailfence.com/drafts"  . ?d)
+        ("/b8478@mailfence.com/archive" . ?a)
+
+        ("/mail@albertdelafuente.com/inbox"   . ?y)
+        ("/mail@albertdelafuente.com/sent"    . ?z)
+        ("/mail@albertdelafuente.com/archive" . ?h)
+        ("/mail@albertdelafuente.com/archive-2009-2015" . ?1)
+        ("/mail@albertdelafuente.com/archive-2016-2020" . ?2)
+        ("/mail@albertdelafuente.com/archive-2021-2025" . ?3)
+        ))
+
+    ;; Automatically sign all email
+    (setq mml-secure-openpgp-signers '("0xD8D61EA07D26FA99"))
+    (add-hook 'message-send-hook 'mml-secure-message-sign-pgpmime)
+
+    (setq dw/mu4e-inbox-query
+          "(maildir:/b8478@mailfence.com/inbox OR maildir:/admin@haevas.com/inbox OR maildir:/antonietta.vigliotti@gmail.com/inbox OR maildir:/mail@albertdelafuente.com/inbox) AND flag:unread")
+)
+
+(use-package! org-mime)
+  ;:ensure t)
+
+(use-package! mu4e-alert
+  :after mu4e
+  :config
+  ;; Show unread emails from all inboxes
+  (setq mu4e-alert-interesting-mail-query dw/mu4e-inbox-query)
+
+  ;; Show notifications for mails already notified
+  (setq mu4e-alert-notify-repeated-mails nil)
+
+  (mu4e-alert-enable-notifications))
+#+END_SRC
+
+#+RESULTS:
+: org-mime
+
+** =nov-mode= / Novel                                         :apps:reading:
+:PROPERTIES:
+:ID:       c898dc3f-c7dc-4769-b67c-aebe5eec7032
+:END:
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+#+END_SRC
+** =ob-sclang= / Supercollider                                  :apps:music:
+:PROPERTIES:
+:ID:       9ec81633-d4ef-4609-ac9d-f1e9de22ba9b
+:END:
+#+BEGIN_SRC emacs-lisp
+  (use-package! ob-sclang)
+;     :config (org-babel-do-load-languages
+;              'org-babel-load-languages
+;              '((sclang . t))))
+
+  (require 'ob-sclang)
+;  (org-babel-do-load-languages
+;      'org-babel-load-languages
+;      '((sclang . t)))
+#+END_SRC
+
+Add =sclang= babel language
+
+** DONE =openwith=                                               :apps:core:
+:PROPERTIES:
+:ID:       47fbdcce-318c-424f-9452-99d84e454d0b
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! openwith
+  :after-call pre-command-hook
+  :config
+  (openwith-mode -1)
+  (add-to-list 'openwith-associations '("\\.mp4\\'" "mpv" (file)))
+  (add-to-list 'openwith-associations '("\\.mp3\\'" "mpv" (file)))
+  (add-to-list 'openwith-associations '("\\.png\\'" "shotwell" (file)))
+  (add-to-list 'openwith-associations '("\\.pdf\\'" "zathura" (file)))
+)
+
+; Disable by default
+(add-hook 'after-init-hook 'openwith-mode -1)
+#+END_SRC
+
+*IMPORTANT NOTE*
+- To open PDF's on emacs =disable= the =openwith-mode=, and click a pdf file.
+- To open PDF's on zathura, just click the pdf file (=openwith-mode= is enabled
+  by default)
+
+** DONE =org-babel-eval-in-repl= / Python                       :apps:devel:
+:PROPERTIES:
+:ID:       2ae30731-ff25-4c36-8445-6597ca7ab4b9
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! org-babel-eval-in-repl
+  :after org
+  :config
+  (setq eir-jump-after-eval nil)
+  )
+(with-eval-after-load "ob"
+  (require 'org-babel-eval-in-repl)
+  (define-key org-mode-map (kbd "C-c R") 'ober-eval-in-repl)
+  (define-key org-mode-map (kbd "C-c r") 'ober-eval-block-in-repl))
+#+END_SRC
+
+#+BEGIN_SRC python :session "session1" :tangle no
+print("hi from sh shell sh1")
+print("hi1")
+#+END_SRC
+
+#+BEGIN_SRC python :session "session2" :tangle no
+print("hi from sh shell sh2")
+print("hi2")
+#+END_SRC
+
+Use:
+- =ober-eval-in-repl= to evaluate a single line
+- =ober-eval-block-in-repl= (or =M-<return>=) to evaluate a block
+- See more https://github.com/diadochos/org-babel-eval-in-repl
+** DONE =org-crypt / epa-file= / GPG                             :apps:core:
+:PROPERTIES:
+:ID:       795db04b-5c0b-49cb-832a-1f7ca51d619f
+:END:
+*** Symmetric encryption (GPG)
+:PROPERTIES:
+:ID:       8fe77c6e-70d1-469b-b22f-253ad2d76f7e
+:END:
+- =org-encrypt-entry=
+- =org-decrypt-entry=
+Read: [[id:8d33a2ef-21a1-43ec-9e92-30567665ef30][How to encrypt on Emacs]]
+See: http://vsbabu.org/twenties/doom_emacs_org_1_to_10/
+
+*** Asymmetric encryption (GPG)
+:PROPERTIES:
+:ID:       38e7ca0d-deb9-4822-b1c9-51b7c98f70d4
+:END:
+- User header: =# -*- epa-file-encrypt-to: ("vonpupp@keybase.io") -*-=
+- =epa-encrypt-file=
+- Select the org file to encrypt
+- Mark with =m= the recipient(s)
+- A file with gpg extension will be created
+Read: [[id:2d9469cb-b523-4326-9ebe-b9912a599dd3][How to encrypt a full file on Emacs]]
+
+#+BEGIN_SRC emacs-lisp
+(setenv "GPG_AGENT_INFO" nil)
+
+(use-package! epa-file
+  ;; :ensure nil ;; included with Emacs
+  :config
+  (setq epa-file-encrypt-to
+        (let ((recipients (getenv "EMACS_EPA_FILE_ENCRYPT")))
+          (if recipients
+              ;; Split by comma if multiple recipients given
+              (split-string recipients ", *" t)
+            ;; fallback recipient if env var not set
+            '("user@example.com"))))
+  :custom
+  (epa-file-select-keys 'silent))
+
+(use-package! org-crypt
+  ;:ensure nil  ;; included with org-mode
+  :after org
+  :config
+  (org-crypt-use-before-save-magic)
+  (setq org-tags-exclude-from-inheritance (quote ("crypt")))
+  :custom
+  ;(org-crypt-key "vonpupp@keybase.io"))
+  (org-crypt-key nil))
+#+END_SRC
+
+** DONE =ox-hugo= / Hugo                                        :apps:devel:
+:PROPERTIES:
+:ID:       5439fd12-de57-44c6-818d-ab3438340e22
+:END:
+#+BEGIN_SRC emacs-lisp
+  ;(defun vonpupp/conditional-hugo-enable ()
+  ;  (save-excursion
+  ;    (if (cdr (assoc "SETUPFILE" (org-roam--extract-global-props '("SETUPFILE"))))
+  ;        (org-hugo-auto-export-mode +1)
+  ;      (org-hugo-auto-export-mode -1))))
+
+  (use-package! ox-hugo
+    ;:ensure t
+    :after ox
+    :config
+      (setq org-hugo-external-file-extensions-allowed-for-copying
+        '("jpg" "jpeg" "tiff" "png" "svg" "gif"
+          "apkg"
+          "mp4"
+          "pdf" "odt"
+          "doc" "ppt" "xls"
+          "docx" "pptx" "xlsx"))
+      ;(add-hook 'org-mode-hook #'vonpupp/conditional-hugo-enable)
+  )
+#+END_SRC
+
+See: https://chaoruan.org/post/ox-hugo-install-issue-with-spacemacs/
+
+** DONE =pass / otp=                                             :apps:core:
+:PROPERTIES:
+:ID:       742efb3c-7933-41c4-939a-69ba2890e116
+:END:
+=password-store-copy=
+=password-store-otp-token-copy=
+=password-store-copy-field=
+
+*** DONE Bind these functions to a prefix (either with general or not)
+:PROPERTIES:
+:ID:       36d3c44f-2de2-4b42-8408-f45ef5c8d878
+:END:
+
+** =pdf-tools=                                                :apps:reading:
+:PROPERTIES:
+:ID:       ea0058d8-700f-47c8-a03a-bca53d73e04c
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! pdf-tools
+  :init
+    (pdf-tools-install)
+  :config
+    (setq-default pdf-view-display-size 'fit-width)
+)
+
+(use-package! org-pdftools
+  :hook (org-load . org-pdftools-setup-link))
+
+;(use-package! org-noter-pdftools
+;  :after org-noter
+;  :config
+;  (with-eval-after-load 'pdf-annot
+;    (add-hook 'pdf-annot-activate-handler-functions
+;       #'org-noter-pdftools-jump-to-note)))
+
+;(after! pdf-view
+;  ;; open pdfs scaled to fit page
+;  (setq-default pdf-view-display-size 'fit-width)
+;  (add-hook! 'pdf-view-mode-hook (evil-colemak-basics-mode -1))
+;  ;; automatically annotate highlights
+;  (setq pdf-annot-activate-created-annotations t
+;        pdf-view-resize-factor 1.1)
+;   ;; faster motion
+; (map!
+;   :localleader
+;   (:prefix "o"
+;    (:prefix "n"
+;     :desc "Insert" "i" 'org-noter-insert-note
+;     ))
+; ))
+#+END_SRC
+** IDEA =spray=                                     :apps:learning:noexport:
+:PROPERTIES:
+:ID:       a710c08d-1fab-4e70-811f-b8ad81d78457
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! spray
+  :commands spray-mode
+  :config
+  (setq spray-wpm 600
+        spray-height 800)
+  (defun spray-mode-hide-cursor ()
+    "Hide or unhide the cursor as is appropriate."
+    (if spray-mode
+        (setq-local spray--last-evil-cursor-state evil-normal-state-cursor
+                    evil-normal-state-cursor '(nil))
+      (setq-local evil-normal-state-cursor spray--last-evil-cursor-state)))
+  (add-hook 'spray-mode-hook #'spray-mode-hide-cursor)
+  (map! :map spray-mode-map
+        "<return>" #'spray-start/stop
+        "f" #'spray-faster
+        "s" #'spray-slower
+        "t" #'spray-time
+        "<right>" #'spray-forward-word
+        "h" #'spray-forward-word
+        "<left>" #'spray-backward-word
+        "l" #'spray-backward-word
+        "q" #'spray-quit))
+#+END_SRC
+** =tidal= / Tidal Cycles                              :apps:music:noexport:
+:PROPERTIES:
+:ID:       12913593-e751-4648-af56-34c69f812ce3
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package! tidal
+  :mode ("\\.tidal\\’" . tidal-mode)
+  :config (setq tidal-interpreter "/usr/bin/ghci"
+                haskell-process-type 'auto
+                ;; boot script from https://github.com/tidalcycles/Tidal/blob/main/BootTidal.hs
+                tidal-boot-script-path "/usr/share/haskell-tidal/BootTidal.hs"))
+#+END_SRC
+** =TaskJuggler=                                                      :apps:
+:PROPERTIES:
+:ID:       d371edc4-216d-4289-9a1d-f65915d5de85
+:END:
+#+BEGIN_SRC emacs-lisp
+;(setq org-taskjuggler-reports-directory "~/")
+#+END_SRC
+** KILL =world clock=                                                 :apps:
+:PROPERTIES:
+:ID:       980efd32-d660-48a7-9059-ad512368708f
+:END:
+#+BEGIN_SRC emacs-lisp
+(setq display-time-world-list '(("Europe/UK" "OBF 15h00 / UK Time")
+                                ("Canada/Pacific" "RS  13h00 / Canada PST")
+                                ("US/Central" "DS7 17h00 / US Central CST")
+                                ("Europe/Madrid" "ESMAD")
+                                ("America/Caracas" "VECCS")))
+#+END_SRC
+
+=M-x world-clock=
+*** [[http://wenshanren.org/?p=658][Emacs: Display World Time | Wenshan's Blog]]
+:PROPERTIES:
+:ID:       3e54275a-8fd9-4272-bf8d-3e10a53b25da
+:END:
+- Source: http://wenshanren.org/?p=658
+- Title: Emacs: Display World Time | Wenshan's Blog
+- Captured on: [2022-03-29 Tue]
+** =yasnippet=                                                        :apps:
+:PROPERTIES:
+:ID:       ed0d3298-e210-4384-b3d9-70722bb68567
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! doom-snippets
+  :load-path "~/.emacs.d.doomemacs/.local/straight/repos/doom-snippets"
+  :after yasnippet
+  :config
+    (setq yas-snippet-dirs (append yas-snippet-dirs
+                                   '("~/.emacs.d.doomemacs/.local/straight/repos/doom-snippets"))))
+#+END_SRC
+
+The main folder of the snippets is located in =~/.doom.d/snippets/[org-mode]=.
+
+Creating a snippet:
+- Select text
+- =yas-new-snippet=
+- Follow though the wizard, select the mode, save as file
+
+Using a snippet:
+- Start typing the key until it appears on the context menu
+- Press =enter= to insert the snippet
+
+Read: https://practicalli.github.io/spacemacs/snippets/add-your-own-snippets.html
+
+** IDEA =org-yt / org-image-link=                                     :apps:
+:PROPERTIES:
+:ID:       a6895f78-1b5d-4a49-8b20-08949e3ac4d2
+:END:
+#+BEGIN_SRC emacs-lisp
+  ;; Source: https://emacs.stackexchange.com/questions/42281/org-mode-is-it-possible-to-display-online-images
+  (require 'org-yt)
+
+  (defun org-image-link (protocol link _description)
+    "Interpret LINK as base64-encoded image data."
+    (cl-assert (string-match "\\`img" protocol) nil
+               "Expected protocol type starting with img")
+    (let ((buf (url-retrieve-synchronously (concat (substring protocol 3) ":" link))))
+      (cl-assert buf nil
+                 "Download of image \"%s\" failed." link)
+      (with-current-buffer buf
+        (goto-char (point-min))
+        (re-search-forward "\r?\n\r?\n")
+        (buffer-substring-no-properties (point) (point-max)))))
+
+  (org-link-set-parameters
+   "imghttp"
+   :image-data-fun #'org-image-link)
+
+  (org-link-set-parameters
+   "imghttps"
+   :image-data-fun #'org-image-link)
+#+END_SRC
+** IDEA =eglot= / Python                                 :apps:devel:python:
+** IDEA =ein= / Python / Jupyter [NOT WORKING]           :apps:devel:python:
+:PROPERTIES:
+:ID:       43b9f911-996f-43af-aca0-1d9e1cead088
+:END:
+#+BEGIN_SRC emacs-lisp
+;(use-package! ein
+;  :config
+;  (setq ob-ein-languages
+;   (quote
+;    (("ein-python" . python)
+;     ("ein-R" . R)
+;     ("ein-r" . R)
+;     ("ein-rust" . rust)
+;     ("ein-haskell" . haskell)
+;     ("ein-julia" . julia))))
+;   (setq ein:output-area-inlined-images t)
+;   ;(setq '(ein:output-area-inlined-images t))
+;   (setq ein:slice-image t)
+;  )
+;
+;(after! ein:ipynb-mode
+;  (poly-ein-mode 1)
+;  (output-area-inlined-images 1)
+;  (hungry-delete-mode -1)
+;  )
+#+END_SRC
+
+See: https://bytemeta.vip/repo/millejoh/emacs-ipython-notebook/issues/793
+I am not sure this is working but apparently to use a virtualenv you need to start ein as follows:
+#+BEGIN_SRC emacs-lisp :session test
+;'(ein:jupyter-server-command "~/.workon-home/venv-geek-hebrew/bin/jupyter")
+#+END_SRC
+
+#+RESULTS:
+| ein:jupyter-server-command | ~/.workon-home/venv-geek-hebrew/bin/jupyter |
+
+#+BEGIN_SRC emacs-lisp :session test
+;(ein:jupyter-server-start)
+#+END_SRC
+
+As a minimal example use:
+#+NAME: bbc23a93-1a12-4de1-83e0-7a93a418fdfa
+#+BEGIN_SRC ein-python :session http://localhost:8889/Untitled.ipynb :results output drawer :tangle no
+import matplotlib.pyplot as plt
+%matplotlib inline
+plt.plot([1,2,3,4,6])
+plt.ylabel('some numbers')
+plt.show()
+#+END_SRC
+
+#+RESULTS: bbc23a93-1a12-4de1-83e0-7a93a418fdfa
+:results:
+[....]
+:end:
+
+Note that =C-c C-c= on =ein-python= blocks +is not+ wasn't working...
+
+Reload org if it is not working with:
+#+BEGIN_SRC emacs-lisp
+(org-reload)
+#+END_SRC
+
+#+RESULTS:
+: Successfully reloaded Org
+: Org mode version 9.7 (9.7-??-9082fa889 @ /home/av/.emacs.d.doomemacs/.local/straight/build-28.2/org/)
+
+** IDEA =jupyter= / Python / Jupyter                     :apps:devel:python:
+:PROPERTIES:
+:ID:       69f82f1a-9b2a-4f0c-ad39-c2518eef8d35
+:END:
+#+BEGIN_SRC emacs-lisp
+(use-package! jupyter
+  :init
+  (setq jupyter-eval-use-overlays t)
+  )
+
+(add-hook! '+org-babel-load-functions
+    (defun +org-babel-load-jupyter-h (lang)
+      (and (string-prefix-p "jupyter-" (symbol-name lang))
+       (require 'ob-jupyter)
+           (require lang nil t))))
+
+;(org-babel-do-load-languages
+; 'org-babel-load-languages
+; '((emacs-lisp . t)
+;   (python . t)
+;   ))
+;
+;'org-babel-load-languages
+;'((emacs-lisp . t)
+;  (python . t)
+;)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+;(use-package! popup
+;  :ensure t)
+;;; (add-to-list 'load-path "~/.emacs.d/emacs-jupyter")
+;(use-package! jupyter
+;  :demand t
+;  :after (:all org python))
+;
+;(org-babel-do-load-languages
+; 'org-babel-load-languages
+; '((emacs-lisp . t)
+;   (python . t)
+;   (jupyter . t)))
+#+END_SRC
+
+Use:
+#+BEGIN_SRC elisp
+  (pyvenv-activate "~/.workon-home/venv-textfabric")
+  (load "ob-jupyter")
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(jupyter-run-repl)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(car (jupyter-get-kernelspec "python3"))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+;  (org-babel-do-load-languages
+;   'org-babel-load-languages
+;    '((emacs-lisp . t)
+;    (python . t)
+;    (jupyter . t)
+;    (ein . t)
+;    (ipython . t)
+;    (sclang . t)
+;    (ditaa . t)
+;    ))
+; '(org-babel-load-languages '((python . t) (emacs-lisp . t)))
+#+END_SRC
+
+#+RESULTS:
+| org-babel-load-languages | '((python . t) (emacs-lisp . t)) |
+
+#+begin_src emacs-lisp
+;(org-babel-do-load-languages
+;   'org-babel-load-languages
+;   '(
+;     (emacs-lisp . t)
+;     (org . t)
+;     (shell . t)
+;     (latex . t)
+;     (jupyter . t)
+;     ))
+;(org-babel-jupyter-aliases-from-kernelspecs t)
+#+END_SRC
+
+#+BEGIN_SRC jupyter-python :session py :kernel python3 :async yes :tangle no
+x = 'foo'
+y = 'bar'
+x + ' ' + y
+#+END_SRC
+
+#+begin_src jupyter-python :session py :results raw drawer :kernel python3 :async yes :tangle no
+%matplotlib inline
+import numpy as np
+import pandas as pd
+x = np.linspace(1,100, 10)
+y = np.random.normal(size=10)*x
+df = pd.DataFrame({'x':x, 'y':y})
+df.plot(x='x', y='y')
+#+END_SRC
+
+**** Resources
+https://martinralbrecht.wordpress.com/2020/08/23/conda-jupyter-and-emacs/
+
+** IDEA =foxdot-mode=                                           :apps:music:
+:PROPERTIES:
+:ID:       dc63bf92-b96a-41a9-8dcd-e3b4a816f252
+:END:
+#+BEGIN_SRC emacs-lisp
+#+END_SRC
+
+** KILL Python - ob-ipython / Jupyter (substitute of ein) :apps:devel:python:
+#+BEGIN_SRC ipython :session ipythontestsession :results raw drawer :tangle no
+  %matplotlib inline
+  import matplotlib.pyplot as plt
+  import numpy as np
+#+END_SRC
+
+#+BEGIN_SRC ipython :session :exports both :results raw drawer :tangle no
+  plt.hist(np.random.randn(20000), bins=200)
+#+END_SRC
+;   ;; other languages..
+;   ))
+#+END_SRC
+** =ob-lilypond=                                                :apps:music:
+#+BEGIN_SRC emacs-lisp
+(use-package! ob-lilypond
+  :commands (org-babel-execute:lilypond)
+  :custom
+  (org-babel-lilypond-commands '("lilypond -daux-files=#f" "xdg-open" "xdg-open"))
+  :config
+  (defun my/org-lilypond-preprocess-block (args)
+    (let* ((defaults (string-join
+                      '("\\layout{"
+                        "#(layout-set-staff-size 25)"
+                        "}"
+                        "\\paper{"
+                        "indent=0\\mm"
+                        "line-width=200\\mm"
+                        "oddFooterMarkup=##f"
+                        "oddHeaderMarkup=##f"
+                        "bookTitleMarkup=##f"
+                        "scoreTitleMarkup=##f"
+                        "}"
+                        )
+                      "\n"))
+           (body (car args))
+           (newbody (format "%s\n%s" defaults body))
+           (params (cadr args)))
+      (list newbody params)))
+  (advice-add 'org-babel-execute:lilypond
+              :filter-args
+              'my/org-lilypond-preprocess-block))
+#+END_SRC
+** =org-caldav=
+#+NAME: caldav-host-url
+#+BEGIN_SRC sh :exports none :noexport:
+HOST="http://hs01.i4e.lan:5232/admin"
+echo "$HOST"
+#+END_SRC
+
+#+BEGIN_SRC sh :var host=caldav-host-url :tangle no
+curl -u user -X MKCOL "${host}/sharedcal" --data \
+      '<?xml version="1.0" encoding="UTF-8" ?>
+  <create xmlns="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" xmlns:I="http://apple.com/ns/ical/">
+    <set>
+      <prop>
+        <resourcetype>
+          <collection />
+          <C:calendar />
+        </resourcetype>
+        <C:supported-calendar-component-set>
+          <C:comp name="VEVENT" />
+          <C:comp name="VJOURNAL" />
+          <C:comp name="VTODO" />
+        </C:supported-calendar-component-set>
+        <displayname>Shared calendar</displayname>
+        <C:calendar-description>Shared calendar</C:calendar-description>
+        <I:calendar-color>#ff0000ff</I:calendar-color>
+      </prop>
+    </set>
+  </create>'
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC emacs-lisp
+(use-package! org-caldav
+  :ensure t
+  :config
+  (setq org-caldav-delete-calendar-entries 'always)
+  (setq org-caldav-save-directory "~/org/caldav/")
+  (setq org-caldav-url
+        (or (getenv "EMACS_ORG_CALDAV_URL")
+            "http://hs01.i4e.lan:5232/admin")
+
+  (setq org-caldav-calendars
+	'((:calendar-id "sharedcal"
+                        :files ("~/org/caldav/sharedcal-events.org")
+                        :inbox ("~/org/caldav/sharedcal-inbox.org")
+                        )))
+)
+
+(setq org-icalendar-timezone
+      (or (getenv "EMACS_ORG_ICALENDAR_TIMEZONE")
+          "Canada/Ontario"))
+
+;; This makes sure to-do items as a category can show up on the calendar
+(setq org-icalendar-include-todo 'all
+    org-caldav-sync-todo t)
+;; This ensures all org "deadlines" show up as due dates
+(setq org-icalendar-use-deadline '(todo-due))
+;; This ensures "scheduled" org items show up as start times
+(setq org-icalendar-use-scheduled '(todo-start))
+
+#+END_SRC
+
+#+RESULTS:
+| todo-start |
+
+** =shell-command+=
+#+BEGIN_SRC emacs-lisp
+;(use-package! shell-command+)
+#+END_SRC
+(use-package! org-caldav
+** [0%] Tasks [0%] [0/7]                                          :noexport:
+:* Tasks [22%] [2/9]                                                :noexport:
+*** TODO Review which files are able to refile
+*** TODO ox-json
+- https://www.reddit.com/r/emacs/comments/ccwl4r/i_made_a_json_export_back_end_for_org_mode/
+*** TODO ob-translate
+- https://github.com/krisajenkins/ob-translate
+*** TODO ob-browser
+- https://github.com/krisajenkins/ob-browser
+*** TODO org-super-agenda
+*** TODO org-kanban
+- https://github.com/lijigang/ljg-dotfile/blob/master/spacemacs-config.org
+*** TODO poet theme for writing?
+*** FIX edit-server
+** References                                                     :noexport:
+*** [STATES AUTOMATION] [[https://github.com/nmartin84/.doom.d][nmartin84/.doom.d: Private DOOM Emacs config highly focused around orgmode and GTD methodology, along with language support for Python and Elisp.]]
+- Source: https://github.com/nmartin84/.doom.d
+- Title: nmartin84/.doom.d: Private DOOM Emacs config highly focused around orgmode and GTD methodology, along with language support for Python and Elisp.
+- Captured on: [2022-01-02 Sun]
+*** [[https://medium.com/urbint-engineering/emacs-doom-for-newbies-1f8038604e3b][Emacs Doom for Newbies. One of the highest learning curves I… | by Justin DeMaris | Urbint | Medium]]
+- Source: https://medium.com/urbint-engineering/emacs-doom-for-newbies-1f8038604e3b
+- Title: Emacs Doom for Newbies. One of the highest learning curves I… | by Justin DeMaris | Urbint | Medium
+- Captured on: [2021-02-07 Sun]
+
+*** [[https://github.com/KaratasFurkan/.emacs.d#python][GitHub - KaratasFurkan/.emacs.d: My literate Emacs configuration]]
+- Source: https://github.com/KaratasFurkan/.emacs.d#python
+- Title: GitHub - KaratasFurkan/.emacs.d: My literate Emacs configuration
+- Captured on: [2021-07-03 Sat]

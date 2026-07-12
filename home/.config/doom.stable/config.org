@@ -116,7 +116,7 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory (or (getenv "EMACS_ORG_DIRECTORY") "~/org"))
+(setq org-directory "~/org")
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
@@ -201,11 +201,11 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
         org-src-preserve-indentation t
         org-src-tab-acts-natively t)
 
-  (setq my-org-directory (or (getenv "EMACS_MY_ORG_DIRECTORY") "~/org")
-      my-org-roam-directory (or (getenv "EMACS_MY_ORG_ROAM_DIRECTORY") "~/org/roam")
-      my-org-journal-directory (or (getenv "EMACS_MY_ORG_JOURNAL_DIRECTORY") "~/org/journal")
-      org-default-capture-file (or (getenv "EMACS_ORG_DEFAULT_CAPTURE_FILE") "~/org/capture.org")
-      my-org-notes (or (getenv "EMACS_MY_ORG_NOTES") "~/org/notes"))
+  (setq my-org-directory "~/org"
+      my-org-roam-directory "~/org/exobrain"
+      my-org-journal-directory "~/org/exobrain/journal"
+      org-default-capture-file "~/org/capture.org"
+      my-org-notes "~/org/exobrain/noter")
 
   ;; Modules
   (setq org-modules
@@ -382,7 +382,11 @@ exec emacs --init-directory="$EMACSDIR" --daemon=doom-stable "$@"
   - Recorded: %U
   :HoursWeek:  Get it automatically
   :END:" :empty-lines 1)
-  )))
+  
+      ("td" "Dated header" entry (file org-default-capture-file)
+       "* %(format-time-string \"%<%Y-%m-%d %a >\")" :empty-lines 1)
+  )
+))
 #+END_SRC
 
 *** Quick how to use org-protocol / capture templates
@@ -416,17 +420,13 @@ The '(server-start)' is needed. So start emacs using =em=
   :hook (after-init . org-roam-setup)
   :init
   (setq org-roam-directory
-      (file-truename
-       (or (getenv "EMACS_ORG_ROAM_DIRECTORY")
-           "~/org/roam/"))
-      (org-roam-db-location
-       (or (getenv "EMACS_ORG_ROAM_DB_LOCATION")
-           "~/org/exobrain/org-roam.db"))
+      (file-truename "~/org/exobrain/")
+      (org-roam-db-location "~/org/exobrain/org-roam.db")
       org-roam-database-connector 'sqlite-builtin
       org-roam-db-gc-threshold most-positive-fixnum
       org-id-link-to-org-use-id t
       org-roam-graphviz-executable "/usr/bin/dot"
-      org-roam-dailies-directory "journal/"
+      org-roam-dailies-directory "exobrain/journal/"
       org-roam-graph-exclude-matcher "private"
       org-roam-tag-sources '(prop last-directory))
 
@@ -574,6 +574,7 @@ The '(server-start)' is needed. So start emacs using =em=
    org-pomodoro-short-break-length 5
    ))
 #+END_SRC
+
 ** TODO org-download                                         :org_mode:apps:
 *** Config
 :PROPERTIES:
@@ -745,8 +746,7 @@ Related configs:
    org-noter-hide-other nil
    org-noter-auto-save-last-location t
    org-noter-notes-search-path
-   (list (or (getenv "EMACS_ORG_NOTES_SEARCH_PATH")
-             "~/org/notes")))
+   (list "~/org/exobrain/noter")))
 
   ;; Attach the hook
   (add-hook 'pdf-view-mode-hook #'my/org-noter-auto-start))
